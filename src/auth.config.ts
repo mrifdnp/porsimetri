@@ -1,18 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
 
 // Config ringan — TANPA import db/fs, aman untuk Edge Runtime (middleware)
 export const authConfig: NextAuthConfig = {
-  providers: [
-    Credentials({
-      credentials: {
-        email: { label: "Email" },
-        password: { label: "Password", type: "password" },
-      },
-      // authorize diisi di auth.ts yang full, bukan di sini
-      async authorize() { return null; },
-    }),
-  ],
+  providers: [],
   callbacks: {
     jwt({ token, user }) {
       if (user) {
