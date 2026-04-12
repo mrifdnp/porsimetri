@@ -1,0 +1,78 @@
+[
+  {
+    "id": "d0c658dc-cc37-415a-a9dd-7c31809bdc72",
+    "email": "admin@porsimetri.id",
+    "passwordHash": "$2a$10$6GFDzKaSBecANc9HecnO/.SaVbPgNjfcZE6Sw8AolhYZxTrseXa.W",
+    "role": "admin",
+    "namaLengkap": "Admin PorsiMetri",
+    "createdAt": "2026-04-12T03:10:49.662Z"
+  },
+  {
+    "id": "d7670dfb-66f7-48a9-9fc5-921cc18e1c7a",
+    "email": "d2q@",
+    "passwordHash": "$2a$10$tQXvT3kRzwz99BbIRTDM.ev00Yo.8UjfXnqGQucfUI19yzvYcD9GO",
+    "role": "user",
+    "namaLengkap": "Rifqi Dani",
+    "createdAt": "2026-04-12T04:12:54.565Z",
+    "profile": {
+      "tanggalLahir": "2026-04-07",
+      "alamat": "dadawdwdwad",
+      "beratBadan": 33,
+      "tinggiBadan": 33,
+      "pekerjaan": "www",
+      "tingkatAktivitas": "Ringan",
+      "riwayatPenyakit": [],
+      "statusDiet": ""
+    }
+  },
+  {
+    "id": "7d4a5bbc-4546-40c9-9e11-1f2faf14dd36",
+    "email": "rifqi@",
+    "passwordHash": "$2a$10$MGJ2Jc4..kyhTErMkYIFq.Yuxmps8AODGznh9jZR67dFa1DI.wwO6",
+    "role": "user",
+    "namaLengkap": "Rifqi",
+    "createdAt": "2026-04-12T04:13:47.168Z",
+    "profile": {
+      "tanggalLahir": "",
+      "alamat": "",
+      "pekerjaan": "",
+      "tingkatAktivitas": "",
+      "riwayatPenyakit": [],
+      "statusDiet": ""
+    }
+  },
+  {
+    "id": "5d66b7f3-321d-4c17-9e19-2577fe2eafb4",
+    "email": "rifqi@gmail.com",
+    "passwordHash": "$2a$10$ge6AVqld01x.W59fw.j4W.mSw4IGvtyyBOOsI7kQlLObv1N5tNpa2",
+    "role": "user",
+    "namaLengkap": "Rifqi",
+    "createdAt": "2026-04-12T04:14:16.019Z",
+    "profile": {
+      "tanggalLahir": "",
+      "alamat": "",
+      "pekerjaan": "",
+      "tingkatAktivitas": "",
+      "riwayatPenyakit": [],
+      "statusDiet": ""
+    }
+  },
+  {
+    "id": "be00731a-3d3a-41d6-9709-b2170b88f57c",
+    "email": "nakes@porsimetri.com",
+    "passwordHash": "$2a$10$pkb6dpvXJvlroOR/DeKkc.lXhDz4rXeXjbBGdpZGbirVrjNVdkeoK",
+    "role": "nakes",
+    "namaLengkap": "Mohamad Rifqi",
+    "noHp": "085156925923",
+    "createdAt": "2026-04-12T04:57:29.262Z",
+    "profile": {
+      "noHp": "085156925923",
+      "pekerjaan": "Nutrisionis",
+      "lamaBekerja": "1-5 th",
+      "instansi": "12",
+      "alamatInstansi": "12",
+      "dokumenSTR": "Gambar1.png",
+      "dokumenSIP": "Gambar1.png"
+    }
+  }
+]
