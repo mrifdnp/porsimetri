@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { readKebutuhanGizi, writeKebutuhanGizi } from "@/lib/db";
-import type { KebutuhanGizi } from "@/lib/types";
-import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/lib/supabase";
 
 export async function GET(
   req: NextRequest,
@@ -12,10 +10,22 @@ export async function GET(
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const role = (session.user as { role?: string })?.role;
   if (role !== "nakes" && role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  
   const { userId } = await params;
-  const all = await readKebutuhanGizi();
-  const found = all.filter(k => k.userId === userId).sort((a, b) => a.createdAt > b.createdAt ? -1 : 1);
-  return NextResponse.json(found[0] ?? null);
+  
+  const { data, error } = await supabase
+    .from('kebutuhan_gizi')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(data || null);
 }
 
 export async function POST(
@@ -31,21 +41,29 @@ export async function POST(
 
   try {
     const body = await req.json();
-    const entry: KebutuhanGizi = {
-      id: uuidv4(),
-      userId,
-      nakesId,
-      energi: Number(body.energi),
-      protein: Number(body.protein),
-      lemak: Number(body.lemak),
-      karbohidrat: Number(body.karbohidrat),
-      serat: Number(body.serat),
-      createdAt: new Date().toISOString(),
-    };
-    const all = await readKebutuhanGizi();
-    await writeKebutuhanGizi([...all, entry]);
+    
+    // Sama halnya dengan file di atas, jika ingin hanya ada satu kebutuhan per user,
+    // kita bisa mendelete yang lama atau biarkan saja history-nya menumpuk dan GET data terbaru.
+    // Di sini kita biarkan menumpuk seperti versi aslinya.
+    
+    const { data: entry, error } = await supabase
+      .from('kebutuhan_gizi')
+      .insert({
+        user_id: userId,
+        nakes_id: nakesId,
+        energi: Number(body.energi),
+        protein: Number(body.protein),
+        lemak: Number(body.lemak),
+        karbohidrat: Number(body.karbohidrat),
+        serat: Number(body.serat)
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    
     return NextResponse.json(entry, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }
 }

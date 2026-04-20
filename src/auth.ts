@@ -1,8 +1,12 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { getUserByEmail } from "@/lib/db";
 import { authConfig } from "./auth.config";
+
+class InvalidLoginError extends CredentialsSignin {
+  code = "Username atau password salah.";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -13,15 +17,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) throw new InvalidLoginError();
         const user = await getUserByEmail(credentials.email as string);
-        if (!user) return null;
-        const valid = await bcrypt.compare(credentials.password as string, user.passwordHash);
-        if (!valid) return null;
+        if (!user) throw new InvalidLoginError();
+        const valid = await bcrypt.compare(credentials.password as string, (user as any).password_hash || (user as any).passwordHash);
+        if (!valid) throw new InvalidLoginError();
         return {
           id: user.id,
           email: user.email,
-          name: user.namaLengkap,
+          name: (user as any).nama_lengkap || user.namaLengkap,
           role: user.role,
         };
       },

@@ -7,8 +7,16 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const role = (session.user as { role?: string })?.role;
   if (role !== "admin" && role !== "nakes") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  
   const users = await readUsers();
-  // Hapus passwordHash sebelum kirim
-  const sanitized = users.map(({ passwordHash: _ph, ...rest }) => rest);
+  const sanitized = users.map((u: any) => {
+    const { password_hash, passwordHash, created_at, nama_lengkap, no_hp, ...rest } = u;
+    return {
+      ...rest,
+      namaLengkap: nama_lengkap || u.namaLengkap,
+      noHp: no_hp || u.noHp,
+      createdAt: created_at || u.createdAt
+    };
+  });
   return NextResponse.json(sanitized);
 }

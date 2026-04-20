@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Eye, EyeOff, Loader2, AlertCircle, ChevronLeft } from "lucide-react";
+import { 
+  Heart, Eye, EyeOff, Loader2, AlertCircle, 
+  ChevronLeft, ShieldCheck, CheckCircle2, 
+  User, Activity, ClipboardList 
+} from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const RIWAYAT_PENYAKIT_OPTIONS = ["DM (Diabetes Melitus)", "Hipertensi", "Stroke", "Jantung", "Kanker", "Hepatitis"];
 const TINGKAT_AKTIVITAS = [
@@ -11,7 +16,6 @@ const TINGKAT_AKTIVITAS = [
   { value: "Ringan", desc: "Duduk, aktivitas ringan di kantor/rumah" },
   { value: "Sedang", desc: "Berdiri, berjalan, aktivitas sedang" },
   { value: "Berat", desc: "Olahraga, pekerjaan fisik berat" },
-  { value: "Sangat Berat", desc: "Atlet, pekerjaan sangat berat" },
 ];
 
 export default function RegisterUserPage() {
@@ -52,278 +56,273 @@ export default function RegisterUserPage() {
   async function handleSubmit() {
     setError("");
     setLoading(true);
+    
     try {
       const res = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
+          role: "user",
           namaLengkap,
           email,
           password,
-          role: "user",
           profile: {
             tanggalLahir,
             alamat,
-            beratBadan: beratBadan ? Number(beratBadan) : undefined,
-            tinggiBadan: tinggiBadan ? Number(tinggiBadan) : undefined,
+            beratBadan: Number(beratBadan) || 0,
+            tinggiBadan: Number(tinggiBadan) || 0,
             pekerjaan,
             tingkatAktivitas,
             riwayatPenyakit,
-            riwayatKonsultasiGizi: riwayatKonsultasi ?? undefined,
+            riwayatKonsultasiGizi: riwayatKonsultasi,
             statusDiet,
-            pengobatanRutin: adaPengobatan !== null ? { ada: adaPengobatan, jenis: jenisPengobatan || undefined } : undefined,
-            kepesertaanProlanis: prolanis ?? undefined,
-            pemeriksaanRutin: pemeriksaanRutin ?? undefined,
+            pengobatanRutin: { ada: adaPengobatan || false, jenis: jenisPengobatan },
+            kepesertaanProlanis: prolanis,
+            pemeriksaanRutin,
           },
         }),
       });
+
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Registrasi gagal"); setLoading(false); return; }
+      if (!res.ok) throw new Error(data.error || "Gagal membuat akun");
+      
       router.push("/login?registered=1");
-    } catch {
-      setError("Terjadi kesalahan. Coba lagi.");
+    } catch (err: any) {
+      setError(err.message);
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#e8f9fa] via-white to-[#d0f0f2] flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 mb-2">
-            <Heart size={22} fill="currentColor" />
+    <div className="min-h-screen bg-[#FBFBFB] flex items-center justify-center p-4 md:p-10 relative overflow-hidden font-sans">
+      
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#00B9AD]/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[30vw] h-[30vw] bg-[#CDD729]/10 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-5 bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.12)] overflow-hidden relative z-10 border border-gray-100 min-h-[700px]">
+        
+        {/* LEFT SIDE: Visual Brand & Stepper (2 Cols) */}
+        <div className="hidden lg:flex lg:col-span-2 bg-[#00B9AD] p-16 flex-col justify-between relative overflow-hidden">
+          <svg className="absolute top-0 left-0 w-full h-full opacity-10" viewBox="0 0 400 600">
+            <path d="M0 100 H 200 V 500 H 400" stroke="white" strokeWidth="2" fill="none" strokeDasharray="10 10" />
+          </svg>
+
+          <div className="relative z-10">
+            <div className="w-16 h-16 relative mb-8">
+              <Image src="/logo-kemenkes-color.png" alt="Logo" fill className="object-contain brightness-0 invert" />
+            </div>
+            <h1 className="text-4xl font-black text-white leading-tight tracking-tighter mb-12">
+              Lengkapi Profil <br /> Kesehatan Anda.
+            </h1>
+
+            {/* Vertical Stepper */}
+            <div className="space-y-10">
+              {[
+                { step: 1, label: "Informasi Akun", icon: User },
+                { step: 2, label: "Profil Fisik", icon: Activity },
+                { step: 3, label: "Riwayat Medis", icon: ClipboardList },
+              ].map((item) => (
+                <div key={item.step} className="flex items-center gap-4 group">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 shadow-lg ${
+                    step >= item.step ? "bg-[#CDD729] text-[#1E293B]" : "bg-white/10 text-white/40"
+                  }`}>
+                    <item.icon size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${step >= item.step ? "text-[#CDD729]" : "text-white/30"}`}>Step 0{item.step}</span>
+                    <span className={`font-bold ${step >= item.step ? "text-white" : "text-white/40"}`}>{item.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Porsi<span className="text-primary">Metri</span></h1>
+
+          <div className="relative z-10 flex items-center gap-3 text-white/50 text-[10px] font-black uppercase tracking-[0.3em]">
+            <ShieldCheck size={16} /> Secured by Kemenkes Poltekkes Ykt
+          </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 mb-6">
-            {[1, 2, 3].map(s => (
-              <div key={s} className="flex items-center gap-2 flex-1">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                  ${step >= s ? "bg-primary text-white" : "bg-gray-100 text-gray-400"}`}>
-                  {s}
-                </div>
-                {s < 3 && <div className={`flex-1 h-0.5 rounded-full transition-all ${step > s ? "bg-primary" : "bg-gray-100"}`} />}
-              </div>
-            ))}
+        {/* RIGHT SIDE: Form Section (3 Cols) */}
+        <div className="lg:col-span-3 p-8 md:p-16 flex flex-col bg-white overflow-y-auto max-h-[90vh] lg:max-h-none">
+          <div className="mb-10 flex justify-between items-end">
+            <div>
+              <h2 className="text-3xl font-black text-[#1E293B] mb-2 tracking-tight">
+                {step === 1 && "Halo, Siapa Anda?"}
+                {step === 2 && "Detail Tubuh Anda"}
+                {step === 3 && "Kondisi Kesehatan"}
+              </h2>
+              <div className="h-1.5 w-12 bg-[#00B9AD] rounded-full" />
+            </div>
+            <span className="text-xs font-black text-gray-300 uppercase tracking-widest">User Registration</span>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 mb-4 text-sm font-medium">
-              <AlertCircle size={15} className="shrink-0" />
-              {error}
+            <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 rounded-2xl px-5 py-4 mb-8 text-sm font-bold">
+              <AlertCircle size={18} /> {error}
             </div>
           )}
 
-          {/* Step 1: Akun */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Data Akun</h2>
-                <p className="text-sm text-gray-500">Isi informasi untuk login</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap</label>
-                <input id="u-nama" type="text" value={namaLengkap} onChange={e => setNamaLengkap(e.target.value)}
-                  placeholder="Nama sesuai identitas" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Aktif</label>
-                <input id="u-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="nama@email.com" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-                <div className="relative">
-                  <input id="u-password" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
-                    placeholder="Min. 8 karakter" className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-                  <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                    {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+          {/* Form Content */}
+          <div className="flex-1">
+            {step === 1 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="group">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 group-focus-within:text-[#00B9AD]">Nama Lengkap</label>
+                  <input type="text" value={namaLengkap} onChange={e => setNamaLengkap(e.target.value)} placeholder="Masukkan nama sesuai KTP"
+                    className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                </div>
+                <div className="group">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 group-focus-within:text-[#00B9AD]">Email Aktif</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="nama@perusahaan.com"
+                    className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                </div>
+                <div className="group">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 group-focus-within:text-[#00B9AD]">Password</label>
+                  <div className="relative">
+                      <input type={showPass ? "text" : "password"} autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
+                      className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#00B9AD]">
+                      {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button onClick={() => {
-                if (!namaLengkap || !email || password.length < 8) { setError("Lengkapi semua data. Password min. 8 karakter."); return; }
-                setError(""); setStep(2);
-              }} className="w-full bg-primary text-white font-bold py-3.5 rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20 mt-2">
-                Lanjut
-              </button>
-            </div>
-          )}
+            )}
 
-          {/* Step 2: Profil Fisik */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Data Fisik</h2>
-                <p className="text-sm text-gray-500">Informasi fisik untuk analisis gizi</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Lahir</label>
-                  <input id="u-ttl" type="date" value={tanggalLahir} onChange={e => setTanggalLahir(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+            {step === 2 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="group">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tanggal Lahir</label>
+                    <input type="date" value={tanggalLahir} onChange={e => setTanggalLahir(e.target.value)}
+                      className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                  </div>
+                  <div className="group">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Pekerjaan</label>
+                    <input type="text" value={pekerjaan} onChange={e => setPekerjaan(e.target.value)} placeholder="Cth: PNS"
+                      className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="group">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">BB (kg)</label>
+                    <input type="number" value={beratBadan} onChange={e => setBeratBadan(e.target.value)} placeholder="60"
+                      className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold text-center" />
+                  </div>
+                  <div className="group">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">TB (cm)</label>
+                    <input type="number" value={tinggiBadan} onChange={e => setTinggiBadan(e.target.value)} placeholder="165"
+                      className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold text-center" />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pekerjaan</label>
-                  <input id="u-pekerjaan" type="text" value={pekerjaan} onChange={e => setPekerjaan(e.target.value)}
-                    placeholder="Pelajar, PNS, dll." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Tingkat Aktivitas Fisik</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {TINGKAT_AKTIVITAS.map(ta => (
+                      <button key={ta.value} type="button" onClick={() => setTingkatAktivitas(ta.value)}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all ${tingkatAktivitas === ta.value ? "border-[#00B9AD] bg-[#EBFBF9]" : "border-gray-50 bg-[#FBFBFB] hover:border-gray-200"}`}>
+                        <div className="font-black text-xs text-[#1E293B]">{ta.value}</div>
+                        <div className="text-[10px] text-gray-500 font-medium">{ta.desc}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Alamat</label>
-                <input id="u-alamat" type="text" value={alamat} onChange={e => setAlamat(e.target.value)}
-                  placeholder="Alamat lengkap" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            )}
+
+            {step === 3 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Berat Badan (kg)</label>
-                  <input id="u-bb" type="number" min="20" max="300" value={beratBadan} onChange={e => setBeratBadan(e.target.value)}
-                    placeholder="60" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Riwayat Penyakit</label>
+                  <div className="flex flex-wrap gap-2">
+                    {RIWAYAT_PENYAKIT_OPTIONS.map(p => (
+                      <button key={p} type="button" onClick={() => togglePenyakit(p)}
+                        className={`px-4 py-2 rounded-full border-2 text-[10px] font-black transition-all ${riwayatPenyakit.includes(p) ? "bg-[#00B9AD] border-[#00B9AD] text-white" : "border-gray-100 text-gray-400 hover:border-gray-200"}`}>
+                        {p}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tinggi Badan (cm)</label>
-                  <input id="u-tb" type="number" min="100" max="250" value={tinggiBadan} onChange={e => setTinggiBadan(e.target.value)}
-                    placeholder="165" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Pernah Konsultasi Gizi?</label>
+                    <div className="flex gap-2">
+                      {[true, false].map(v => (
+                        <button key={String(v)} type="button" onClick={() => setRiwayatKonsultasi(v)}
+                          className={`flex-1 py-3 rounded-xl border-2 font-black text-xs ${riwayatKonsultasi === v ? "border-[#74D58C] bg-[#F1FBF4] text-[#1E293B]" : "border-gray-50 text-gray-400"}`}>{v ? "YA" : "TIDAK"}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Sedang Diet?</label>
+                    <input type="text" value={statusDiet} onChange={e => setStatusDiet(e.target.value)} placeholder="Cth: Rendah Garam"
+                      className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-xl px-4 py-3 text-xs text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tingkat Aktivitas Fisik</label>
-                <div className="space-y-2">
-                  {TINGKAT_AKTIVITAS.map(ta => (
-                    <button key={ta.value} type="button" onClick={() => setTingkatAktivitas(ta.value)}
-                      className={`w-full flex items-center gap-3 border-2 rounded-xl px-4 py-2.5 text-left transition-all
-                        ${tingkatAktivitas === ta.value ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200"}`}>
-                      <div className={`w-4 h-4 rounded-full border-2 shrink-0 transition-all
-                        ${tingkatAktivitas === ta.value ? "border-primary bg-primary" : "border-gray-300"}`} />
-                      <div>
-                        <div className={`text-sm font-semibold ${tingkatAktivitas === ta.value ? "text-primary" : "text-gray-700"}`}>{ta.value}</div>
-                        <div className="text-xs text-gray-500">{ta.desc}</div>
+
+                <div className="bg-[#FBFBFB] p-6 rounded-[2rem] border border-gray-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Pengobatan Rutin & Prolanis</label>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-3 bg-white rounded-2xl shadow-sm">
+                      <span className="text-[10px] font-bold text-gray-500">PROLANIS?</span>
+                      <div className="flex gap-1">
+                        {[true, false].map(v => (
+                          <button key={String(v)} onClick={() => setProlanis(v)} className={`w-8 h-8 rounded-lg text-[10px] font-black ${prolanis === v ? "bg-[#CDD729] text-[#1E293B]" : "bg-gray-100 text-gray-300"}`}>{v ? "Y" : "T"}</button>
+                        ))}
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button onClick={() => setStep(1)} className="flex items-center gap-1 px-5 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-all">
-                  <ChevronLeft size={16} /> Kembali
-                </button>
-                <button onClick={() => { setError(""); setStep(3); }} className="flex-1 bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20">
-                  Lanjut
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Riwayat Kesehatan */}
-          {step === 3 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Riwayat Kesehatan</h2>
-                <p className="text-sm text-gray-500">Informasi kesehatan untuk analisis lebih akurat</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Riwayat Penyakit (pilih yang sesuai)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {RIWAYAT_PENYAKIT_OPTIONS.map(p => (
-                    <button key={p} type="button" onClick={() => togglePenyakit(p)}
-                      className={`border-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all
-                        ${riwayatPenyakit.includes(p) ? "border-primary bg-primary/10 text-primary" : "border-gray-100 text-gray-600 hover:border-gray-200"}`}>
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Pernah konsultasi gizi?</label>
-                <div className="flex gap-3">
-                  {[true, false].map(v => (
-                    <button key={String(v)} type="button" onClick={() => setRiwayatKonsultasi(v)}
-                      className={`flex-1 border-2 rounded-xl py-2.5 text-sm font-semibold transition-all
-                        ${riwayatKonsultasi === v ? "border-primary bg-primary/10 text-primary" : "border-gray-100 text-gray-600 hover:border-gray-200"}`}>
-                      {v ? "Ya" : "Tidak"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Status Diet Saat Ini</label>
-                <input id="u-diet" type="text" value={statusDiet} onChange={e => setStatusDiet(e.target.value)}
-                  placeholder="Cth: Diet rendah garam, diet DM" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Pengobatan rutin?</label>
-                <div className="flex gap-3 mb-2">
-                  {[true, false].map(v => (
-                    <button key={String(v)} type="button" onClick={() => setAdaPengobatan(v)}
-                      className={`flex-1 border-2 rounded-xl py-2.5 text-sm font-semibold transition-all
-                        ${adaPengobatan === v ? "border-primary bg-primary/10 text-primary" : "border-gray-100 text-gray-600 hover:border-gray-200"}`}>
-                      {v ? "Ya" : "Tidak"}
-                    </button>
-                  ))}
-                </div>
-                {adaPengobatan && (
-                  <input id="u-obat" type="text" value={jenisPengobatan} onChange={e => setJenisPengobatan(e.target.value)}
-                    placeholder="Jenis obat yang dikonsumsi" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Peserta Prolanis?</label>
-                  <div className="flex gap-2">
-                    {[true, false].map(v => (
-                      <button key={String(v)} type="button" onClick={() => setProlanis(v)}
-                        className={`flex-1 border-2 rounded-xl py-2 text-sm font-semibold transition-all
-                          ${prolanis === v ? "border-primary bg-primary/10 text-primary" : "border-gray-100 text-gray-600"}`}>
-                        {v ? "Ya" : "Tidak"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Pemeriksaan Rutin?</label>
-                  <div className="flex gap-2">
-                    {[true, false].map(v => (
-                      <button key={String(v)} type="button" onClick={() => setPemeriksaanRutin(v)}
-                        className={`flex-1 border-2 rounded-xl py-2 text-sm font-semibold transition-all
-                          ${pemeriksaanRutin === v ? "border-primary bg-primary/10 text-primary" : "border-gray-100 text-gray-600"}`}>
-                        {v ? "Ya" : "Tidak"}
-                      </button>
-                    ))}
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white rounded-2xl shadow-sm">
+                      <span className="text-[10px] font-bold text-gray-500">CEK RUTIN?</span>
+                      <div className="flex gap-1">
+                        {[true, false].map(v => (
+                          <button key={String(v)} onClick={() => setPemeriksaanRutin(v)} className={`w-8 h-8 rounded-lg text-[10px] font-black ${pemeriksaanRutin === v ? "bg-[#60C0D0] text-[#1E293B]" : "bg-gray-100 text-gray-300"}`}>{v ? "Y" : "T"}</button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
+          </div>
 
-              {error && (
-                <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">
-                  <AlertCircle size={15} className="shrink-0" />
-                  {error}
-                </div>
+          {/* Bottom Actions */}
+          <div className="mt-10 flex items-center gap-4">
+            {step > 1 && (
+              <button onClick={() => setStep(step - 1)} className="p-5 rounded-2xl border-2 border-gray-100 text-gray-400 hover:text-[#1E293B] transition-all">
+                <ChevronLeft size={24} />
+              </button>
+            )}
+            <button
+              onClick={() => {
+                if (step < 3) {
+                  if (step === 1 && (!namaLengkap || !email || password.length < 8)) { setError("Lengkapi data akun dengan benar."); return; }
+                  setError(""); setStep(step + 1);
+                } else {
+                  handleSubmit();
+                }
+              }}
+              disabled={loading}
+              className="flex-1 bg-[#1E293B] hover:bg-[#00B9AD] text-white font-black text-xl py-5 rounded-2xl transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-3 group"
+            >
+              {loading ? <Loader2 size={24} className="animate-spin" /> : (
+                <>
+                  {step === 3 ? "BUAT AKUN SAYA" : "SELANJUTNYA"}
+                  <CheckCircle2 size={22} className="opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0" />
+                </>
               )}
+            </button>
+          </div>
 
-              <div className="flex gap-3 pt-1">
-                <button onClick={() => setStep(2)} className="flex items-center gap-1 px-5 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-all">
-                  <ChevronLeft size={16} /> Kembali
-                </button>
-                <button onClick={handleSubmit} disabled={loading}
-                  className="flex-1 bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary-dark disabled:opacity-60 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2">
-                  {loading ? <><Loader2 size={16} className="animate-spin" /> Mendaftar...</> : "Selesai & Daftar"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          <p className="text-center text-sm text-gray-500 mt-5">
-            Sudah punya akun?{" "}
-            <Link href="/login" className="text-primary font-semibold hover:underline">Masuk</Link>
+          <p className="text-center text-xs font-bold text-gray-300 mt-8">
+            Sudah terdaftar? <Link href="/login" className="text-[#00B9AD] hover:underline uppercase ml-1">Masuk</Link>
           </p>
         </div>
       </div>

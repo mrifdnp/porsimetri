@@ -38,10 +38,16 @@ export interface DbUser {
   profile?: UserProfile | NakesProfile;
 }
 
+export interface KategoriMakanan {
+  id: number;
+  nama: string;
+}
+
 export interface MakananItem {
   id: number;
   nama: string;
-  kategori: "Karbohidrat" | "Lauk Hewani" | "Lauk Nabati" | "Sayur" | "Buah" | "Lemak" | "Serba-serbi" | "One Dish Meal" | "Snack";
+  kategori_id: number;
+  kategori?: KategoriMakanan; // Join table
   jenis: "Bahan Makanan" | "Makanan Matang";
   energi: number;
   protein: number;

@@ -1,35 +1,115 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
-import { ChevronLeft, Plus, Trash2, Search, X, Loader2 } from "lucide-react";
+import AdminSidebar from "@/components/AdminSidebar";
+import { 
+  Search, Plus, Trash2, X, Loader2, 
+  UtensilsCrossed, Zap, ChevronDown, Filter, ImageIcon
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { MakananItem } from "@/lib/types";
-
-const KATEGORI_LIST = ["Karbohidrat", "Lauk Hewani", "Lauk Nabati", "Sayur", "Buah", "Lemak", "Serba-serbi", "One Dish Meal", "Snack"] as const;
-
-const emptyForm = () => ({
-  nama: "",
-  kategori: "Karbohidrat" as MakananItem["kategori"],
-  jenis: "Bahan Makanan" as MakananItem["jenis"],
-  energi: "",
-  protein: "",
-  karbohidrat: "",
-  lemak: "",
-  serat: "",
-  urt: "",
-  satuanGram: "100",
-});
+import { supabase } from "@/lib/supabase";
 
 export default function AdminMakananPage() {
   const [makanan, setMakanan] = useState<MakananItem[]>([]);
+  const [kategoriList, setKategoriList] = useState<{id: number, nama: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [previewURL, setPreviewURL] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    nama: "", kategori: "1", jenis: "Bahan Makanan",
+    energi: "", protein: "", karbohidrat: "", lemak: "", serat: "",
+    urt: "", satuanGram: "100"
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFotoFile(e.target.files[0]);
+      setPreviewURL(URL.createObjectURL(e.target.files[0]));
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!form.nama) return alert("Nama makanan wajib diisi");
+    
+    setSaving(true);
+    let fotoUrl = null;
+
+    if (fotoFile) {
+      const ext = fotoFile.name.split(".").pop();
+      const fileName = `makanan_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("makanan_images")
+        .upload(fileName, fotoFile);
+
+      if (uploadError) {
+        alert("Gagal upload foto: " + uploadError.message);
+        setSaving(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("makanan_images")
+        .getPublicUrl(uploadData.path);
+        
+      fotoUrl = urlData.publicUrl;
+    }
+
+    const payload = {
+      nama: form.nama,
+      kategori_id: Number(form.kategori),
+      jenis: form.jenis,
+      energi: Number(form.energi) || 0,
+      protein: Number(form.protein) || 0,
+      karbohidrat: Number(form.karbohidrat) || 0,
+      lemak: Number(form.lemak) || 0,
+      serat: Number(form.serat) || 0,
+      satuanGram: Number(form.satuanGram) || 100,
+      urt: form.urt.split("\n").filter(Boolean),
+      foto: fotoUrl
+    };
+
+    try {
+      const res = await fetch("/api/makanan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("Gagal menyimpan data");
+      
+      const newItem = await res.json();
+      setMakanan(prev => [...prev, newItem]);
+      setShowForm(false);
+      setForm({ nama: "", kategori: kategoriList.length > 0 ? kategoriList[0].id.toString() : "1", jenis: "Bahan Makanan", energi: "", protein: "", karbohidrat: "", lemak: "", serat: "", urt: "", satuanGram: "100" });
+      setFotoFile(null);
+      setPreviewURL(null);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
-    fetch("/api/makanan").then(r => r.json()).then(d => { setMakanan(Array.isArray(d) ? d : []); setLoading(false); });
+    Promise.all([
+      fetch("/api/makanan").then(r => r.json()),
+      supabase.from("kategori_makanan").select("*").order("id", { ascending: true })
+    ]).then(([dbMakanan, { data: dbKategori }]) => {
+      setMakanan(Array.isArray(dbMakanan) ? dbMakanan : []);
+      setKategoriList(dbKategori || []);
+      if (dbKategori && dbKategori.length > 0) {
+        setForm(prev => ({ ...prev, kategori: dbKategori[0].id.toString() }));
+      }
+      }).finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
@@ -37,157 +117,174 @@ export default function AdminMakananPage() {
     return makanan.filter(m => m.nama.toLowerCase().includes(q));
   }, [makanan, search]);
 
-  async function handleSave() {
-    setSaving(true);
-    const body = {
-      nama: form.nama,
-      kategori: form.kategori,
-      jenis: form.jenis,
-      energi: Number(form.energi),
-      protein: Number(form.protein),
-      karbohidrat: Number(form.karbohidrat),
-      lemak: Number(form.lemak),
-      serat: Number(form.serat),
-      urt: form.urt.split("\n").map(s => s.trim()).filter(Boolean),
-      satuanGram: Number(form.satuanGram),
-      foto: null,
-    };
-    const res = await fetch("/api/makanan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (res.ok) {
-      const added = await res.json();
-      setMakanan(prev => [...prev, added]);
-      setForm(emptyForm());
-      setShowForm(false);
-    }
-    setSaving(false);
-  }
-
-  async function handleDelete(id: number) {
-    if (!confirm("Hapus item ini?")) return;
-    const res = await fetch(`/api/makanan/${id}`, { method: "DELETE" });
-    if (res.ok) setMakanan(prev => prev.filter(m => m.id !== id));
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3 shadow-sm">
-        <Link href="/dashboard/admin" className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-600">
-          <ChevronLeft size={20} />
-        </Link>
-        <h1 className="font-bold text-gray-900 flex-1">Database Makanan</h1>
-        <button onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-all shadow-sm">
-          {showForm ? <X size={15} /> : <Plus size={15} />}
-          {showForm ? "Batal" : "Tambah"}
-        </button>
-      </div>
+    <div className="flex min-h-screen bg-slate-50 selection:bg-[#00B9AD]/20 font-sans">
+      <AdminSidebar />
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        {/* Form Tambah */}
-        {showForm && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 shadow-sm">
-            <h2 className="font-bold text-gray-900 mb-4">Tambah Makanan Baru</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Nama Makanan</label>
-                <input type="text" value={form.nama} onChange={e => setForm(p => ({ ...p, nama: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Kategori</label>
-                <select value={form.kategori} onChange={e => setForm(p => ({ ...p, kategori: e.target.value as MakananItem["kategori"] }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                  {KATEGORI_LIST.map(k => <option key={k}>{k}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Jenis</label>
-                <select value={form.jenis} onChange={e => setForm(p => ({ ...p, jenis: e.target.value as MakananItem["jenis"] }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                  <option>Bahan Makanan</option>
-                  <option>Makanan Matang</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Satuan Gram (per sajian)</label>
-                <input type="number" value={form.satuanGram} onChange={e => setForm(p => ({ ...p, satuanGram: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-              </div>
+      <main className="flex-1 min-w-0">
+        {/* Top Header Section */}
+        <header className="bg-white border-b border-slate-200 px-10 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Master Makanan</h1>
+            <p className="text-sm text-slate-400 font-medium">Data Terpusat TKPI & Nilai Gizi Makro</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B9AD] transition-colors" size={18} />
+              <input 
+                type="text" 
+                placeholder="Cari item..."
+                className="pl-12 pr-6 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-[#00B9AD]/10 focus:border-[#00B9AD] w-64 transition-all"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-              {(["energi", "protein", "karbohidrat", "lemak", "serat"] as const).map(k => (
-                <div key={k}>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 capitalize">{k} {k === "energi" ? "(kkal)" : "(g)"}</label>
-                  <input type="number" min="0" step="0.01" value={form[k]} onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-                </div>
-              ))}
-            </div>
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-500 mb-1">URT (satu per baris, cth: "1 piring (200g)")</label>
-              <textarea rows={3} value={form.urt} onChange={e => setForm(p => ({ ...p, urt: e.target.value }))}
-                placeholder={"1 piring sedang (200g)\n1 centong (100g)"}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none" />
-            </div>
-            <button onClick={handleSave} disabled={saving || !form.nama}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold text-sm rounded-xl hover:bg-primary-dark disabled:opacity-60 transition-all shadow-sm">
-              {saving ? <><Loader2 size={15} className="animate-spin" /> Menyimpan...</> : "Simpan Makanan"}
+            <button 
+              onClick={() => setShowForm(!showForm)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg ${
+                showForm ? "bg-slate-900 text-white shadow-slate-900/20" : "bg-[#00B9AD] text-white shadow-[#00B9AD]/30 hover:scale-105 active:scale-95"
+              }`}
+            >
+              {showForm ? <X size={16} /> : <Plus size={16} />}
+              {showForm ? "Batal" : "Tambah Item"}
             </button>
           </div>
-        )}
+        </header>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Cari nama makanan..."
-            className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-        </div>
+        <div className="p-10">
+          {/* Form Section */}
+          <AnimatePresence>
+            {showForm && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-xl shadow-slate-200/50 mb-10 overflow-hidden"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Nama Makanan</label>
+                        <input name="nama" value={form.nama} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent focus:border-[#00B9AD] focus:bg-white rounded-2xl px-5 py-3 text-sm font-bold outline-none transition-all" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Kategori</label>
+                        <select name="kategori" value={form.kategori} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent focus:border-[#00B9AD] rounded-2xl px-5 py-3 text-sm font-bold outline-none transition-all">
+                            <option value="">Pilih Kategori</option>
+                              {kategoriList.map((k: any) => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    {/* Input Foto */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Foto Makanan</label>
+                        <label className="flex items-center gap-3 cursor-pointer w-full bg-slate-50 border-2 border-dashed border-slate-200 hover:border-[#00B9AD] hover:bg-[#00B9AD]/5 rounded-2xl px-5 py-3 text-sm font-bold transition-all">
+                          <ImageIcon size={18} className="text-slate-400" />
+                          <span className="text-slate-500">{fotoFile ? fotoFile.name : "Pilih gambar..."}</span>
+                          <input type="file" accept="image/*" onChange={handleFotoChange} className="hidden" />
+                        </label>
+                      </div>
+                      <div className="space-y-1.5 flex items-end">
+                        {previewURL && (
+                          <div className="h-12 w-12 rounded-xl overflow-hidden border border-slate-200">
+                            <img src={previewURL} alt="Preview" className="h-full w-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+                    <div className="grid grid-cols-5 gap-4">
+                      {[ 
+                        { k: "energi", l: "Energi" }, 
+                        { k: "protein", l: "Prot" }, 
+                        { k: "karbohidrat", l: "Carb" }, 
+                        { k: "lemak", l: "Fat" }, 
+                        { k: "serat", l: "Fiber" }
+                      ].map(field => (
+                        <div key={field.k} className="space-y-1.5 text-center">
+                          <label className="text-[9px] font-black uppercase text-slate-400">{field.l}</label>
+                          <input type="number" name={field.k} value={form[field.k as keyof typeof form]} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent focus:border-[#00B9AD] text-center rounded-xl py-3 text-sm font-bold outline-none" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-3xl p-6 flex flex-col justify-between border border-slate-100">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 text-center block">Saji (URT)</label>
+                      <textarea name="urt" value={form.urt} onChange={handleChange} rows={3} placeholder="1 Piring (200g)&#10;1 Centong (100g)" className="w-full bg-white border-2 border-transparent focus:border-[#00B9AD] rounded-2xl px-4 py-3 text-sm font-medium outline-none transition-all" />
+                    </div>
+                    <button 
+                      onClick={handleSubmit} 
+                      disabled={saving}
+                      className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest mt-4 hover:bg-[#00B9AD] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center gap-2"
+                    >
+                      {saving ? <><Loader2 size={14} className="animate-spin" /> MENGUNGGAH...</> : "SIMPAN DATA"}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Table Area */}
+          <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+            <table className="w-full text-left border-separate border-spacing-0">
               <thead>
-                <tr className="bg-gray-50 text-xs text-gray-500 font-bold uppercase tracking-wide">
-                  <th className="text-left px-5 py-3">Nama</th>
-                  <th className="text-left px-4 py-3">Kategori</th>
-                  <th className="text-right px-4 py-3">Energi</th>
-                  <th className="text-right px-4 py-3">Protein</th>
-                  <th className="text-right px-4 py-3">Karbo</th>
-                  <th className="text-right px-4 py-3">Lemak</th>
-                  <th className="text-right px-4 py-3">Serat</th>
-                  <th className="px-5 py-3"></th>
+                <tr className="bg-slate-50/50">
+                  <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100">Informasi Dasar</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 text-center">Energi</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 text-center">Makro Gizi</th>
+                  <th className="px-8 py-5 border-b border-slate-100"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-slate-100">
                 {loading ? (
-                  <tr><td colSpan={8} className="text-center py-12 text-gray-400">Memuat...</td></tr>
-                ) : filtered.map(m => (
-                  <tr key={m.id} className="hover:bg-gray-50/50">
-                    <td className="px-5 py-3 font-semibold text-gray-800">{m.nama}</td>
-                    <td className="px-4 py-3"><span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-lg font-semibold">{m.kategori}</span></td>
-                    <td className="px-4 py-3 text-right text-gray-600">{m.energi}</td>
-                    <td className="px-4 py-3 text-right text-gray-600">{m.protein}</td>
-                    <td className="px-4 py-3 text-right text-gray-600">{m.karbohidrat}</td>
-                    <td className="px-4 py-3 text-right text-gray-600">{m.lemak}</td>
-                    <td className="px-4 py-3 text-right text-gray-600">{m.serat}</td>
-                    <td className="px-5 py-3">
-                      <button onClick={() => handleDelete(m.id)}
-                        className="text-gray-300 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-50 transition-all">
-                        <Trash2 size={14} />
+                  <tr><td colSpan={4} className="py-20 text-center text-slate-300 uppercase text-[10px] font-black tracking-widest animate-pulse">Sinkronisasi Data...</td></tr>
+                ) : filtered.map((m) => (
+                  <tr key={m.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-5">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-[#00B9AD] border border-slate-100 group-hover:scale-110 transition-transform shadow-inner overflow-hidden">
+                          {m.foto ? <img src={m.foto} alt={m.nama} className="w-full h-full object-cover" /> : <UtensilsCrossed size={20} />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 group-hover:text-[#00B9AD] transition-colors">{m.nama}</p>
+                          <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded mt-1 inline-block tracking-tighter">
+                            {m.kategori?.nama || m.kategori_id}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6 text-center">
+                      <p className="text-xl font-black text-slate-900 leading-none">{m.energi}</p>
+                      <span className="text-[8px] font-black text-slate-400 uppercase">Kkal</span>
+                    </td>
+                    <td className="px-6 py-6">
+                      <div className="flex justify-center gap-6">
+                        {[{v: m.protein, l: 'P'}, {v: m.karbohidrat, l: 'C'}, {v: m.lemak, l: 'F'}].map((g, i) => (
+                          <div key={i} className="text-center">
+                            <p className="text-sm font-bold text-slate-900">{g.v}g</p>
+                            <p className="text-[7px] font-black text-slate-400 uppercase leading-none">{g.l}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <button className="p-3 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover:opacity-100">
+                        <Trash2 size={18} />
                       </button>
                     </td>
                   </tr>
                 ))}
-                {!loading && filtered.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-10 text-gray-400">Makanan tidak ditemukan</td></tr>
-                )}
               </tbody>
             </table>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

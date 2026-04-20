@@ -7,15 +7,13 @@ import {
   ChevronDown, Loader2
 } from "lucide-react";
 import type { FoodRecord, MakananItem, WaktuMakan, AsalMakanan, CaraPengolahan } from "@/lib/types";
-import makananData from "../../../../../data/makanan.json";
-
-const makanan: MakananItem[] = makananData as MakananItem[];
 
 const WAKTU_OPTIONS: WaktuMakan[] = ["Pagi", "Snack Pagi", "Siang", "Snack Siang", "Malam", "Snack Malam"];
-const CARA_OPTIONS: CaraPengolahan[] = ["Goreng", "Kukus", "Rebus (air)", "Rebus (santan)", "Bakar", "Pan", "Panggang", "Tumis", "Air Fryer", "Tidak diolah"];
+const CARA_OPTIONS: CaraPengolahan[] = ["Goreng", "Kukus", "Rebus (air)", "Rebus (santan)", "Bakar", "Pan", "Panggang", "Tumis", "Air Fryer", "Tidak diolah"];  
 const ASAL_OPTIONS: AsalMakanan[] = ["Memasak sendiri", "Membeli"];
 
 export default function FoodRecordPage() {
+  const [makananList, setMakananList] = useState<MakananItem[]>([]);
   const [records, setRecords] = useState<FoodRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -34,17 +32,23 @@ export default function FoodRecordPage() {
   const [showMakananList, setShowMakananList] = useState(false);
 
   useEffect(() => {
-    fetch("/api/food-record")
-      .then(r => r.json())
-      .then(d => { setRecords(Array.isArray(d) ? d : []); setLoading(false); })
+    Promise.all([
+      fetch("/api/food-record").then(r => r.json()),
+      fetch("/api/makanan").then(r => r.json())
+    ])
+      .then(([dbRecords, dbMakanan]) => {
+        setRecords(Array.isArray(dbRecords) ? dbRecords : []);
+        setMakananList(Array.isArray(dbMakanan) ? dbMakanan : []);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
   const filteredMakanan = useMemo(() => {
-    if (!searchMakanan.trim()) return makanan.slice(0, 15);
+    if (!searchMakanan.trim()) return makananList.slice(0, 15);
     const q = searchMakanan.toLowerCase();
-    return makanan.filter(m => m.nama.toLowerCase().includes(q)).slice(0, 20);
-  }, [searchMakanan]);
+    return makananList.filter(m => m.nama.toLowerCase().includes(q)).slice(0, 20);
+  }, [searchMakanan, makananList]);
 
   const recordsByHari = records.filter(r => r.hari === hari);
 
@@ -100,7 +104,7 @@ export default function FoodRecordPage() {
         <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
           <label className="block text-sm font-bold text-gray-700 mb-3">Pilih Hari Pencatatan</label>
           <div className="flex gap-2 flex-wrap">
-            {[1,2,3,4,5,6,7].map(h => (
+            {[1, 2, 3, 4, 5, 6, 7].map(h => (
               <button key={h} onClick={() => setHari(h)}
                 className={`w-10 h-10 rounded-xl font-bold text-sm transition-all
                   ${hari === h ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100"}`}>
@@ -172,9 +176,14 @@ export default function FoodRecordPage() {
                     setSelectedUrt(m.urt[0] ?? "");
                     setShowMakananList(false);
                   }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-800">{m.nama}</div>
-                      <div className="text-xs text-gray-400">{m.kategori} · {m.energi} kkal/100g</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+                        {m.foto ? <img src={m.foto} alt={m.nama} className="w-full h-full object-cover" /> : <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">{m.nama}</div>
+                        <div className="text-xs text-gray-400">{m.kategori?.nama || m.kategori_id} · {m.energi} kkal/100g</div>
+                      </div>
                     </div>
                     <span className="text-xs text-primary opacity-0 group-hover:opacity-100 font-semibold transition-opacity">Pilih</span>
                   </button>
@@ -239,9 +248,16 @@ export default function FoodRecordPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {recordsByHari.map(r => (
+              {recordsByHari.map(r => {
+                const foto = makananList.find(m => m.id === r.makananId)?.foto;
+                return (
                 <div key={r.id} className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3 shadow-sm">
-                  <CheckCircle2 size={16} className="text-primary shrink-0" />
+                  <div className="relative shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
+                      {foto ? <img src={foto} alt={r.namaMakanan} className="w-full h-full object-cover" /> : <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
+                    </div>
+                    <CheckCircle2 size={16} className="text-primary absolute -bottom-1 -right-1 bg-white rounded-full" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-sm text-gray-900 truncate">{r.namaMakanan}</div>
                     <div className="text-xs text-gray-500">{r.waktuMakan} · {r.jamMakan} · {r.urt} · {r.caraPengolahan}</div>
@@ -250,7 +266,7 @@ export default function FoodRecordPage() {
                     <Trash2 size={15} />
                   </button>
                 </div>
-              ))}
+              )})}
             </div>
           )}
         </div>

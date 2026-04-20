@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { readFoodRecords, writeFoodRecords } from "@/lib/db";
-import type { FoodRecord } from "@/lib/types";
-import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userId = session.user?.id as string;
-  const all = await readFoodRecords();
-  const records = all.filter(r => r.userId === userId);
-  return NextResponse.json(records);
+  
+  const { data, error } = await supabase
+    .from('food_records')
+    .select('*')
+    .eq('user_id', userId);
+    
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data || []);
 }
 
 export async function POST(req: NextRequest) {
@@ -20,25 +23,29 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const newRecord: FoodRecord = {
-      id: uuidv4(),
-      userId,
-      tanggal: body.tanggal,
-      hari: body.hari,
-      waktuMakan: body.waktuMakan,
-      jamMakan: body.jamMakan,
-      asalMakanan: body.asalMakanan,
-      makananId: body.makananId,
-      namaMakanan: body.namaMakanan,
-      urt: body.urt,
-      jumlahUrt: body.jumlahUrt,
-      caraPengolahan: body.caraPengolahan,
-      createdAt: new Date().toISOString(),
-    };
-    const all = await readFoodRecords();
-    await writeFoodRecords([...all, newRecord]);
+
+    const { data: newRecord, error } = await supabase
+      .from('food_records')
+      .insert({
+        user_id: userId,
+        tanggal: body.tanggal,
+        hari: body.hari,
+        waktu_makan: body.waktuMakan,
+        jam_makan: body.jamMakan,
+        asal_makanan: body.asalMakanan,
+        makanan_id: body.makananId,
+        nama_makanan: body.namaMakanan,
+        urt: body.urt,
+        jumlah_urt: body.jumlahUrt,
+        cara_pengolahan: body.caraPengolahan
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    
     return NextResponse.json(newRecord, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }
 }

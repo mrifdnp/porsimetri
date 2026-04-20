@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { readAnalisisGizi, writeAnalisisGizi } from "@/lib/db";
-import type { AnalisisGizi } from "@/lib/types";
-import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -13,26 +11,31 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const all = await readAnalisisGizi();
 
-    // Hapus analisis lama untuk food record yang sama (upsert)
-    const filtered = all.filter(a => a.foodRecordId !== body.foodRecordId);
+    // Hapus analisis lama untuk food record yang sama sebelum insert baru (upsert manual sederhana)
+    await supabase
+      .from('analisis_gizi')
+      .delete()
+      .eq('food_record_id', body.foodRecordId);
 
-    const entry: AnalisisGizi = {
-      id: uuidv4(),
-      foodRecordId: body.foodRecordId,
-      nakesId,
-      energi: Number(body.energi),
-      protein: Number(body.protein),
-      lemak: Number(body.lemak),
-      karbohidrat: Number(body.karbohidrat),
-      serat: Number(body.serat),
-      createdAt: new Date().toISOString(),
-    };
+    const { data: entry, error } = await supabase
+      .from('analisis_gizi')
+      .insert({
+        food_record_id: body.foodRecordId,
+        nakes_id: nakesId,
+        energi: Number(body.energi),
+        protein: Number(body.protein),
+        lemak: Number(body.lemak),
+        karbohidrat: Number(body.karbohidrat),
+        serat: Number(body.serat),
+      })
+      .select()
+      .single();
 
-    await writeAnalisisGizi([...filtered, entry]);
+    if (error) throw error;
+    
     return NextResponse.json(entry, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }
 }

@@ -28,19 +28,45 @@ export default function RegisterNakesPage() {
   const [alamatInstansi, setAlamatInstansi] = useState("");
 
   // Step 3: Upload Dokumen
-  const [strName, setStrName] = useState("");
-  const [sipName, setSipName] = useState("");
+  const [strFile, setStrFile] = useState<File | null>(null);
+  const [sipFile, setSipFile] = useState<File | null>(null);
 
   function handleFileChange(type: "str" | "sip", file: File | null) {
     if (!file) return;
-    if (type === "str") setStrName(file.name);
-    else setSipName(file.name);
+    if (type === "str") setStrFile(file);
+    else setSipFile(file);
+  }
+
+  async function uploadFile(file: File, folder: string): Promise<string | null> {
+    const ext = file.name.split(".").pop();
+    const fileName = `${folder}_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+    
+    // Import supabase on the fly or ensure it's imported at the top
+    const { supabase } = await import("@/lib/supabase");
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("dokumen_nakes")
+      .upload(fileName, file);
+
+    if (uploadError) throw new Error("Gagal upload " + folder + ": " + uploadError.message);
+
+    const { data: urlData } = supabase.storage
+      .from("dokumen_nakes")
+      .getPublicUrl(uploadData.path);
+      
+    return urlData.publicUrl;
   }
 
   async function handleSubmit() {
     setError("");
     setLoading(true);
     try {
+      let urlSTR, urlSIP;
+      
+      // Upload file directly if selected
+      if (strFile) urlSTR = await uploadFile(strFile, "STR");
+      if (sipFile) urlSIP = await uploadFile(sipFile, "SIP");
+
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,8 +82,8 @@ export default function RegisterNakesPage() {
             lamaBekerja,
             instansi,
             alamatInstansi,
-            dokumenSTR: strName || undefined,
-            dokumenSIP: sipName || undefined,
+            dokumenSTR: urlSTR || undefined,
+            dokumenSIP: urlSIP || undefined,
           },
         }),
       });
@@ -212,19 +238,19 @@ export default function RegisterNakesPage() {
               </div>
 
               {[
-                { label: "STR (Surat Tanda Registrasi)", id: "n-str", type: "str" as const, value: strName },
-                { label: "SIP (Surat Izin Praktik)", id: "n-sip", type: "sip" as const, value: sipName },
+                { label: "STR (Surat Tanda Registrasi)", id: "n-str", type: "str" as const, file: strFile },
+                { label: "SIP (Surat Izin Praktik)", id: "n-sip", type: "sip" as const, file: sipFile },
               ].map(doc => (
                 <div key={doc.id}>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">{doc.label}</label>
                   <label htmlFor={doc.id} className={`flex items-center gap-3 border-2 border-dashed rounded-xl px-4 py-4 cursor-pointer transition-all
-                    ${doc.value ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50 hover:bg-gray-50"}`}>
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${doc.value ? "bg-primary text-white" : "bg-gray-100 text-gray-400"}`}>
+                    ${doc.file ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50 hover:bg-gray-50"}`}>
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${doc.file ? "bg-primary text-white" : "bg-gray-100 text-gray-400"}`}>
                       <Upload size={18} />
                     </div>
-                    <div>
-                      {doc.value
-                        ? <div className="text-sm font-semibold text-primary">{doc.value}</div>
+                    <div className="truncate">
+                      {doc.file
+                        ? <div className="text-sm font-semibold text-primary truncate max-w-[200px]">{doc.file.name}</div>
                         : <>
                           <div className="text-sm font-semibold text-gray-700">Klik untuk upload</div>
                           <div className="text-xs text-gray-400">PDF, JPG, PNG (max 5MB)</div>

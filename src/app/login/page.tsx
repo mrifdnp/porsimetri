@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Heart, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,98 +25,126 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (res?.error) {
-      setError("Email atau password salah. Silakan coba lagi.");
+      setError("Username atau password salah.");
     } else {
+      // Catat log akses (fire-and-forget)
+      fetch("/api/access-log", { method: "POST" }).catch(() => {});
       router.push("/dashboard");
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#e8f9fa] via-white to-[#d0f0f2] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#FBFBFB] flex items-center justify-center p-6 relative overflow-hidden">
+      
+      {/* Background Decor (Vibe Biovita x Gambar Login) */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#00B9AD]/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[30vw] h-[30vw] bg-[#CDD729]/10 rounded-full blur-[100px]" />
+      </div>
 
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 mb-3">
-            <Heart size={28} fill="currentColor" />
+      <div className="w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-2 bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.12)] overflow-hidden relative z-10 border border-gray-100">
+        
+        {/* LEFT SIDE: Visual Brand (Warna Solid dari Gambar) */}
+        <div className="hidden md:flex bg-[#00B9AD] p-16 flex-col justify-between relative overflow-hidden">
+          {/* Circuit Decor */}
+          <svg className="absolute top-0 left-0 w-full h-full opacity-20" viewBox="0 0 400 600">
+            <path d="M0 100 H 200 V 300 H 400" stroke="white" strokeWidth="2" fill="none" strokeDasharray="10 10" />
+            <circle cx="200" cy="300" r="6" fill="white" />
+          </svg>
+
+          <div className="relative z-10">
+            <button 
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold text-sm tracking-widest uppercase mb-12"
+            >
+              <ArrowLeft size={20} /> Kembali
+            </button>
+            
+            <div className="space-y-4">
+              <div className="w-16 h-16 relative mb-6">
+                <Image src="/logo-kemenkes-color.png" alt="Logo" fill sizes="64px" className="object-contain brightness-0 invert" />
+              </div>
+              <h1 className="text-5xl font-black text-white leading-tight tracking-tighter">
+                Welcome back, <br /> Explorer !
+              </h1>
+              <p className="text-[#FBFBFB]/70 text-lg font-medium max-w-xs">
+                Pantau asupan gizi harianmu dengan presisi tinggi di Porsi Metri.
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Porsi<span className="text-primary">Metri</span>
-          </h1>
-          <p className="text-sm text-gray-500 mt-1 font-medium">Manajemen Gizi Digital</p>
+
+          <div className="relative z-10 flex items-center gap-3 text-white/50 text-[10px] font-black uppercase tracking-[0.3em]">
+            <ShieldCheck size={16} /> Secured by Kemenkes Poltekkes Ykt
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Selamat Datang</h2>
-          <p className="text-sm text-gray-500 mb-6">Masuk ke akun PorsiMetri Anda</p>
+        {/* RIGHT SIDE: Form Section */}
+        <div className="p-10 md:p-20 flex flex-col justify-center">
+          <div className="mb-10">
+            <h2 className="text-3xl font-black text-[#1E293B] mb-2 tracking-tight">Login Akun</h2>
+            <div className="h-1.5 w-12 bg-[#CDD729] rounded-full" />
+          </div>
 
           {error && (
-            <div className="flex items-center gap-2.5 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 mb-5 text-sm font-medium">
-              <AlertCircle size={16} className="shrink-0" />
+            <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 rounded-2xl px-5 py-4 mb-8 text-sm font-bold">
+              <AlertCircle size={18} />
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="group">
+              <label className="block text-sm font-black text-[#1E293B] uppercase tracking-widest mb-3 transition-colors group-focus-within:text-[#00B9AD]">
+                Username
+              </label>
               <input
-                id="login-email"
                 type="email"
                 required
-                autoComplete="email"
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nama@email.com"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-gray-400"
+                placeholder="Masukan Username"
+                className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all placeholder:text-gray-300 font-bold"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  id="login-password"
-                  type={showPass ? "text" : "password"}
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-gray-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+            <div className="group">
+              <label className="block text-sm font-black text-[#1E293B] uppercase tracking-widest mb-3 transition-colors group-focus-within:text-[#00B9AD]">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukan Password"
+                className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all placeholder:text-gray-300 font-bold"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm font-bold text-gray-400">
+                Belum ada akun?{" "}
+                <Link href="/register" className="text-[#00B9AD] hover:text-[#60C0D0] transition-colors">
+                  Daftar Sekarang
+                </Link>
+              </p>
             </div>
 
             <button
-              id="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-dark disabled:opacity-60 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-[#CDD729] hover:bg-[#D9E430] disabled:opacity-70 text-[#1E293B] font-black text-xl py-5 rounded-2xl transition-all shadow-[0_20px_40px_-10px_rgba(205,215,41,0.3)] active:scale-[0.98] flex items-center justify-center mt-6"
             >
-              {loading ? <><Loader2 size={18} className="animate-spin" /> Memverifikasi...</> : "Masuk"}
+              {loading ? (
+                <Loader2 className="animate-spin" size={24} />
+              ) : (
+                "Masuk ke Dashboard"
+              )}
             </button>
           </form>
-
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Belum punya akun?{" "}
-            <Link href="/register" className="text-primary font-semibold hover:underline">
-              Daftar di sini
-            </Link>
-          </p>
         </div>
-
-        <p className="text-center text-xs text-gray-400 mt-6 font-medium">
-          © 2026 Kemenkes Poltekkes Yogyakarta
-        </p>
       </div>
     </div>
   );
