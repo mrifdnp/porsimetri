@@ -139,3 +139,12 @@ export interface HasilAnalisis {
   persentase: { energi: number; protein: number; lemak: number; karbohidrat: number; serat: number };
   hariSummary: HariSummary[];
 }
+
+export interface UserFavorite {
+  id: string;
+  userId: string;
+  makananId: number;
+  createdAt: string;
+  makanan?: MakananInduk;
+}
+
