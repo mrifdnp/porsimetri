@@ -25,13 +25,11 @@ export default function PorsiMetriLanding() {
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-10 text-sm font-bold text-[#1E293B]">
-          {["Bagaimana Cara Kerja", "Tentang Kami", "Fitur", "Database Gizi"].map((link) => (
-            <button key={link} className="hover:text-[#00B9AD] transition-colors uppercase tracking-widest text-[10px]">
-              {link}
-            </button>
-          ))}
+        <div className="hidden md:flex items-center text-[#1E293B] uppercase tracking-widest text-xs font-black">
+          Poltekkes Kemenkes Yogyakarta
         </div>
+
+
 
         {/* Tombol LOGIN dengan warna #CDD729 */}
         <Link href="/login">

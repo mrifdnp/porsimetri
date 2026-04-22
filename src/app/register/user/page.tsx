@@ -109,16 +109,19 @@ export default function RegisterUserPage() {
       <div className="w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-5 bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.12)] overflow-hidden relative z-10 border border-gray-100 min-h-[700px]">
         
         {/* LEFT SIDE: Visual Brand & Stepper (2 Cols) */}
-        <div className="hidden lg:flex lg:col-span-2 bg-[#00B9AD] p-16 flex-col justify-between relative overflow-hidden">
-          <svg className="absolute top-0 left-0 w-full h-full opacity-10" viewBox="0 0 400 600">
-            <path d="M0 100 H 200 V 500 H 400" stroke="white" strokeWidth="2" fill="none" strokeDasharray="10 10" />
-          </svg>
+        <div className="hidden lg:flex lg:col-span-2 bg-white p-16 flex-col justify-between relative overflow-hidden border-r border-[#00B9AD]/10">
+          
+          <div className="absolute bottom-[-20%] right-[-30%] w-[120%] h-[120%] opacity-[0.15] pointer-events-none flex items-end justify-end mix-blend-multiply">
+             <Image src="/hero.png" alt="Decor" fill className="object-contain" priority />
+             <div className="absolute top-1/4 right-0 w-32 h-32 bg-[#CDD729]/30 rounded-full blur-3xl animate-pulse"></div>
+             <div className="absolute bottom-1/4 left-0 w-32 h-32 bg-[#60C0D0]/30 rounded-full blur-3xl"></div>
+          </div>
 
           <div className="relative z-10">
             <div className="w-16 h-16 relative mb-8">
-              <Image src="/logo-kemenkes-color.png" alt="Logo" fill className="object-contain brightness-0 invert" />
+              <Image src="/logo-kemenkes-color.png" alt="Logo" fill className="object-contain" />
             </div>
-            <h1 className="text-4xl font-black text-white leading-tight tracking-tighter mb-12">
+            <h1 className="text-4xl font-black text-[#1E293B] leading-tight tracking-tighter mb-12">
               Lengkapi Profil <br /> Kesehatan Anda.
             </h1>
 
@@ -131,21 +134,21 @@ export default function RegisterUserPage() {
               ].map((item) => (
                 <div key={item.step} className="flex items-center gap-4 group">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 shadow-lg ${
-                    step >= item.step ? "bg-[#CDD729] text-[#1E293B]" : "bg-white/10 text-white/40"
+                    step >= item.step ? "bg-[#CDD729] text-[#1E293B]" : "bg-gray-100 text-gray-400"
                   }`}>
                     <item.icon size={20} strokeWidth={2.5} />
                   </div>
                   <div className="flex flex-col">
-                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${step >= item.step ? "text-[#CDD729]" : "text-white/30"}`}>Step 0{item.step}</span>
-                    <span className={`font-bold ${step >= item.step ? "text-white" : "text-white/40"}`}>{item.label}</span>
+                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${step >= item.step ? "text-[#CDD729]" : "text-gray-300"}`}>Step 0{item.step}</span>
+                    <span className={`font-bold ${step >= item.step ? "text-[#1E293B]" : "text-gray-400"}`}>{item.label}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative z-10 flex items-center gap-3 text-white/50 text-[10px] font-black uppercase tracking-[0.3em]">
-            <ShieldCheck size={16} /> Secured by Kemenkes Poltekkes Ykt
+          <div className="relative z-10 flex items-center gap-3 text-[#1E293B] text-[10px] font-black uppercase tracking-[0.3em]">
+            <ShieldCheck size={16} className="text-[#00B9AD]" /> Secured by Kemenkes Poltekkes Ykt
           </div>
         </div>
 
