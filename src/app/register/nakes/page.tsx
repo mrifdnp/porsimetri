@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, Eye, EyeOff, Loader2, AlertCircle, ChevronLeft, Upload } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const PEKERJAAN_OPTIONS = ["Nutrisionis", "Dietisien"] as const;
 const LAMA_OPTIONS = ["1-5 th", "5-10 th", ">10 th"] as const;
@@ -100,10 +101,20 @@ export default function RegisterNakesPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#e8f9fa] via-white to-[#d0f0f2] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-lg">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 mb-2">
-            <Heart size={22} fill="currentColor" />
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 relative shrink-0">
+              <Image 
+                src="/logo-kemenkes-color.png" 
+                alt="Logo Kemenkes"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="font-bold text-2xl tracking-tighter">
+              <span className="text-[#60C0D0]">Porsi</span>
+              <span className="text-[#74D58C] -ml-0.5">Metri</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Porsi<span className="text-primary">Metri</span></h1>
           <p className="text-xs text-gray-500 mt-0.5 font-medium">Pendaftaran Tenaga Kesehatan</p>
         </div>
 

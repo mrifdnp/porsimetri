@@ -19,37 +19,38 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-2 bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.12)] overflow-hidden relative z-10 border border-gray-100">
         
-        {/* LEFT SIDE: Visual Brand (Warna Solid Turquoise dari Referensi) */}
-        <div className="hidden md:flex bg-[#00B9AD] p-16 flex-col justify-between relative overflow-hidden">
-          {/* Circuit Decor */}
-          <svg className="absolute top-0 left-0 w-full h-full opacity-20" viewBox="0 0 400 600">
-            <path d="M400 100 H 200 V 400 H 0" stroke="white" strokeWidth="2" fill="none" strokeDasharray="10 10" />
-            <circle cx="200" cy="400" r="6" fill="white" />
-          </svg>
+        {/* LEFT SIDE: Visual Brand */}
+        <div className="hidden md:flex bg-white p-16 flex-col justify-between relative overflow-hidden border-r border-[#00B9AD]/10">
+          
+          <div className="absolute bottom-[-20%] right-[-30%] w-[120%] h-[120%] opacity-[0.15] pointer-events-none flex items-end justify-end mix-blend-multiply">
+             <Image src="/hero.png" alt="Decor" fill className="object-contain" priority />
+             <div className="absolute top-1/4 right-0 w-32 h-32 bg-[#CDD729]/30 rounded-full blur-3xl animate-pulse"></div>
+             <div className="absolute bottom-1/4 left-0 w-32 h-32 bg-[#60C0D0]/30 rounded-full blur-3xl"></div>
+          </div>
 
           <div className="relative z-10">
             <button 
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold text-sm tracking-widest uppercase mb-12"
+              className="flex items-center gap-2 text-[#00B9AD] hover:text-[#1E293B] transition-colors font-bold text-sm tracking-widest uppercase mb-12"
             >
               <ArrowLeft size={20} /> Kembali
             </button>
             
             <div className="space-y-4">
               <div className="w-16 h-16 relative mb-6">
-                <Image src="/logo-kemenkes-color.png" alt="Logo" fill className="object-contain brightness-0 invert" />
+                <Image src="/logo-kemenkes-color.png" alt="Logo" fill className="object-contain" />
               </div>
-              <h1 className="text-5xl font-black text-white leading-tight tracking-tighter">
+              <h1 className="text-5xl font-black text-[#1E293B] leading-tight tracking-tighter">
                 Mulai Hidup <br /> Lebih Sehat.
               </h1>
-              <p className="text-[#FBFBFB]/70 text-lg font-medium max-w-xs">
+              <p className="text-[#64748B] text-lg font-medium max-w-xs">
                 Bergabunglah dengan ribuan pengguna lainnya dalam memantau nutrisi secara digital.
               </p>
             </div>
           </div>
 
-          <div className="relative z-10 flex items-center gap-3 text-white/50 text-[10px] font-black uppercase tracking-[0.3em]">
-            <ShieldCheck size={16} /> Data Aman & Terverifikasi
+          <div className="relative z-10 flex items-center gap-3 text-[#1E293B] text-[10px] font-black uppercase tracking-[0.3em]">
+            <ShieldCheck size={16} className="text-[#00B9AD]" /> Secured by Poltekkes Kemenkes Yogyakarta
           </div>
         </div>
 

@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Utensils, Users, 
   LogOut, ShieldCheck, User
 } from "lucide-react";
+import Image from "next/image";
 
 const MENU_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/admin" },      
@@ -26,11 +27,19 @@ export default function AdminSidebar() {
   return (
     <aside className="w-64 border-r border-gray-200 flex flex-col bg-white h-screen sticky top-0 shrink-0">
       <div className="p-6">
-        <div className="flex items-center gap-3 text-[#00B9AD] mb-8">
-          <ShieldCheck size={28} strokeWidth={2.5} />
-          <span className="font-black text-xl tracking-tighter text-slate-900">
-            PORSI<span className="text-[#00B9AD]">METRI</span>
-          </span>
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 relative shrink-0">
+            <Image 
+              src="/logo-kemenkes-color.png" 
+              alt="Logo Kemenkes"
+              fill
+              className="object-contain"
+            />
+          </div>
+          <div className="font-bold text-2xl tracking-tighter">
+            <span className="text-[#60C0D0]">Porsi</span>
+            <span className="text-[#74D58C] -ml-0.5">Metri</span>
+          </div>
         </div>
 
         <nav className="space-y-1">

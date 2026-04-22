@@ -8,6 +8,7 @@ import {
   LogOut, Heart, Search, Bell, User
 } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 const NAV_ITEMS = [
   { icon: Activity, label: "Overview", href: "/dashboard/nakes" },
@@ -26,13 +27,19 @@ export default function NakesSidebar() {
   return (
     <aside className="w-72 border-r border-slate-200 flex flex-col bg-white h-screen sticky top-0 shrink-0">
       <div className="p-8">
-        <div className="flex items-center gap-3 text-[#00B9AD] mb-12">
-          <div className="w-10 h-10 rounded-xl bg-[#00B9AD] text-white flex items-center justify-center shadow-lg shadow-[#00B9AD]/20">
-            <Heart size={20} fill="currentColor" />
+        <div className="flex items-center gap-3 mb-12">
+          <div className="w-10 h-10 relative shrink-0">
+            <Image 
+              src="/logo-kemenkes-color.png" 
+              alt="Logo Kemenkes"
+              fill
+              className="object-contain"
+            />
           </div>
-          <span className="font-black text-xl tracking-tighter text-slate-900 uppercase">
-            Porsi<span className="text-[#00B9AD]">metri</span>
-          </span>
+          <div className="font-bold text-2xl tracking-tighter">
+            <span className="text-[#60C0D0]">Porsi</span>
+            <span className="text-[#74D58C] -ml-0.5">Metri</span>
+          </div>
         </div>
 
         <nav className="space-y-2">

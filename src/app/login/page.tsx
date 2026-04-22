@@ -76,7 +76,7 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10 flex items-center gap-3 text-[#1E293B] text-[10px] font-black uppercase tracking-[0.3em]">
-            <ShieldCheck size={16} className="text-[#00B9AD]" /> Secured by Kemenkes Poltekkes Ykt
+            <ShieldCheck size={16} className="text-[#00B9AD]" /> Secured by Poltekkes Kemenkes Yogyakarta
           </div>
         </div>
 

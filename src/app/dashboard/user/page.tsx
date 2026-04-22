@@ -8,6 +8,7 @@ import {
     Heart, PlusCircle, CheckCircle2, Clock, ImageIcon
 } from "lucide-react";
 import type { FoodRecord, MakananInduk } from "@/lib/types";
+import Image from "next/image";
 
 const HARI_LABEL = ["Hari 1", "Hari 2", "Hari 3", "Hari 4", "Hari 5", "Hari 6", "Hari 7"];
 
@@ -41,11 +42,19 @@ export default function UserDashboard() {
         <div className="min-h-screen bg-gray-50 flex flex-col pb-20 md:pb-0">
             {/* Topbar */}
             <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 md:px-8 h-16 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-2 font-bold text-xl">
-                    <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center shadow-sm">
-                        <Heart size={16} fill="currentColor" />
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 relative shrink-0">
+                        <Image 
+                            src="/logo-kemenkes-color.png" 
+                            alt="Logo Kemenkes"
+                            fill
+                            className="object-contain"
+                        />
                     </div>
-                    <span className="text-gray-800">Porsi</span><span className="text-primary -ml-1">Metri</span>
+                    <div className="font-bold text-xl tracking-tighter">
+                        <span className="text-[#60C0D0]">Porsi</span>
+                        <span className="text-[#74D58C] -ml-0.5">Metri</span>
+                    </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <Link href="/dashboard/profile" className="hidden md:flex items-center gap-2 text-sm text-gray-600 hover:text-primary font-semibold group transition-all">
