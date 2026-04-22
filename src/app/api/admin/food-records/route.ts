@@ -10,22 +10,5 @@ export async function GET() {
   
   const records = await readFoodRecords();
   
-  // Transform snake_case from DB into camelCase expected by the UI
-  const sanitized = records.map((r: any) => ({
-    id: r.id,
-    userId: r.user_id,
-    tanggal: r.tanggal,
-    hari: r.hari,
-    waktuMakan: r.waktu_makan,
-    jamMakan: r.jam_makan,
-    asalMakanan: r.asal_makanan,
-    makananId: r.makanan_id,
-    namaMakanan: r.nama_makanan,
-    urt: r.urt,
-    jumlahUrt: r.jumlah_urt,
-    caraPengolahan: r.cara_pengolahan,
-    createdAt: r.created_at
-  }));
-  
-  return NextResponse.json(sanitized);
+  return NextResponse.json(records);
 }

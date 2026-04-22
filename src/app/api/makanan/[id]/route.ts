@@ -12,10 +12,10 @@ export async function DELETE(
   if (role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   
   const { id } = await params;
-  
+
   const { error } = await supabase
-    .from('makanan_item')
-    .delete()
+    .from('makanan_induk')
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', Number(id));
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

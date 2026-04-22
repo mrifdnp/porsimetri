@@ -12,10 +12,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Hapus analisis lama untuk food record yang sama sebelum insert baru (upsert manual sederhana)
+    // Hapus analisis lama untuk food record yang sama (soft delete) sebelum insert baru
     await supabase
       .from('analisis_gizi')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('food_record_id', body.foodRecordId);
 
     const { data: entry, error } = await supabase

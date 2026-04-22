@@ -10,10 +10,30 @@ export async function GET() {
   const { data, error } = await supabase
     .from('food_records')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .is('deleted_at', null);
     
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data || []);
+
+  const mapped = (data || []).map((db: any) => ({
+    id: db.id,
+    userId: db.user_id,
+    tanggal: db.tanggal,
+    hari: db.hari,
+    waktuMakan: db.waktu_makan,
+    jamMakan: db.jam_makan,
+    asalMakanan: db.asal_makanan,
+    makananId: db.makanan_id,
+    porsiId: db.porsi_id,
+    namaMakanan: db.nama_makanan,
+    namaPorsi: db.nama_porsi,
+    urt: db.urt,
+    jumlahUrt: db.jumlah_urt || 1,
+    caraPengolahan: db.cara_pengolahan,
+    createdAt: db.created_at
+  }));
+
+  return NextResponse.json(mapped);
 }
 
 export async function POST(req: NextRequest) {
@@ -34,9 +54,11 @@ export async function POST(req: NextRequest) {
         jam_makan: body.jamMakan,
         asal_makanan: body.asalMakanan,
         makanan_id: body.makananId,
+        porsi_id: body.porsiId,
         nama_makanan: body.namaMakanan,
-        urt: body.urt,
-        jumlah_urt: body.jumlahUrt,
+        nama_porsi: body.namaPorsi,
+        urt: body.urt || body.namaPorsi || "1 Porsi",
+        jumlah_urt: body.jumlahUrt || 1,
         cara_pengolahan: body.caraPengolahan
       })
       .select()
@@ -44,7 +66,23 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     
-    return NextResponse.json(newRecord, { status: 201 });
+    const mappedRecord = {
+      id: newRecord.id,
+      userId: newRecord.user_id,
+      tanggal: newRecord.tanggal,
+      hari: newRecord.hari,
+      waktuMakan: newRecord.waktu_makan,
+      jamMakan: newRecord.jam_makan,
+      asalMakanan: newRecord.asal_makanan,
+      makananId: newRecord.makanan_id,
+      namaMakanan: newRecord.nama_makanan,
+      urt: newRecord.urt,
+      jumlahUrt: newRecord.jumlah_urt,
+      caraPengolahan: newRecord.cara_pengolahan,
+      createdAt: newRecord.created_at
+    };
+
+    return NextResponse.json(mappedRecord, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }

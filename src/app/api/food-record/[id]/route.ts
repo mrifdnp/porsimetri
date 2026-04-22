@@ -23,7 +23,7 @@ export async function DELETE(
   
   const { error: deleteError } = await supabase
     .from('food_records')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', id);
 
   if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });

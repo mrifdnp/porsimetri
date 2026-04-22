@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
 import {
-  ChevronLeft, Search, Plus, Trash2, CheckCircle2,
-  ChevronDown, Loader2
+  Search, Plus, Trash2, CheckCircle2,
+  ChevronDown, Loader2, ClipboardList
 } from "lucide-react";
-import type { FoodRecord, MakananItem, WaktuMakan, AsalMakanan, CaraPengolahan } from "@/lib/types";
+import UserSidebar from "@/components/UserSidebar";
+import type { FoodRecord, MakananInduk, MakananPorsi, WaktuMakan, AsalMakanan, CaraPengolahan } from "@/lib/types";
 
 const WAKTU_OPTIONS: WaktuMakan[] = ["Pagi", "Snack Pagi", "Siang", "Snack Siang", "Malam", "Snack Malam"];
 const CARA_OPTIONS: CaraPengolahan[] = ["Goreng", "Kukus", "Rebus (air)", "Rebus (santan)", "Bakar", "Pan", "Panggang", "Tumis", "Air Fryer", "Tidak diolah"];  
 const ASAL_OPTIONS: AsalMakanan[] = ["Memasak sendiri", "Membeli"];
 
 export default function FoodRecordPage() {
-  const [makananList, setMakananList] = useState<MakananItem[]>([]);
+  const [makananList, setMakananList] = useState<MakananInduk[]>([]);
   const [records, setRecords] = useState<FoodRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,9 +26,8 @@ export default function FoodRecordPage() {
   const [asalMakanan, setAsalMakanan] = useState<AsalMakanan>("Memasak sendiri");
   const [caraPengolahan, setCaraPengolahan] = useState<CaraPengolahan>("Tidak diolah");
   const [searchMakanan, setSearchMakanan] = useState("");
-  const [selectedMakanan, setSelectedMakanan] = useState<MakananItem | null>(null);
-  const [selectedUrt, setSelectedUrt] = useState("");
-  const [jumlahUrt, setJumlahUrt] = useState(1);
+  const [selectedMakanan, setSelectedMakanan] = useState<MakananInduk | null>(null);
+  const [selectedPorsi, setSelectedPorsi] = useState<MakananPorsi | null>(null);
   const [showMakananList, setShowMakananList] = useState(false);
 
   useEffect(() => {
@@ -53,7 +52,7 @@ export default function FoodRecordPage() {
   const recordsByHari = records.filter(r => r.hari === hari);
 
   async function handleTambah() {
-    if (!selectedMakanan || !selectedUrt) return;
+    if (!selectedMakanan || !selectedPorsi) return;
     setSaving(true);
     const body = {
       tanggal,
@@ -62,9 +61,9 @@ export default function FoodRecordPage() {
       jamMakan,
       asalMakanan,
       makananId: selectedMakanan.id,
+      porsiId: selectedPorsi.id,
       namaMakanan: selectedMakanan.nama,
-      urt: `${jumlahUrt}x ${selectedUrt}`,
-      jumlahUrt,
+      namaPorsi: selectedPorsi.nama_porsi,
       caraPengolahan,
     };
     const res = await fetch("/api/food-record", {
@@ -76,9 +75,8 @@ export default function FoodRecordPage() {
       const newRecord = await res.json();
       setRecords(prev => [...prev, newRecord]);
       setSelectedMakanan(null);
-      setSelectedUrt("");
+      setSelectedPorsi(null);
       setSearchMakanan("");
-      setJumlahUrt(1);
     }
     setSaving(false);
   }
@@ -89,188 +87,200 @@ export default function FoodRecordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3 shadow-sm">
-        <Link href="/dashboard/user" className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-600 transition-colors">
-          <ChevronLeft size={20} />
-        </Link>
-        <h1 className="font-bold text-gray-900 text-base">Estimated Food Record</h1>
-      </div>
+    <div className="flex min-h-screen bg-[#F8FAFC]">
+      <UserSidebar />
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+      <main className="flex-1 min-w-0 p-10 max-w-5xl">
+        {/* Page Header */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Estimated Food Record</h1>
+          <p className="text-slate-400 font-medium">Catat makanan harian selama 7 hari pencatatan.</p>
+        </div>
 
-        {/* Pilih Hari */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-          <label className="block text-sm font-bold text-gray-700 mb-3">Pilih Hari Pencatatan</label>
-          <div className="flex gap-2 flex-wrap">
-            {[1, 2, 3, 4, 5, 6, 7].map(h => (
-              <button key={h} onClick={() => setHari(h)}
-                className={`w-10 h-10 rounded-xl font-bold text-sm transition-all
-                  ${hari === h ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100"}`}>
-                {h}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Form Section */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Pilih Hari */}
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Pilih Hari Pencatatan</h2>
+              <div className="flex gap-2 flex-wrap">
+                {[1, 2, 3, 4, 5, 6, 7].map(h => (
+                  <button key={h} onClick={() => setHari(h)}
+                    className={`w-12 h-12 rounded-2xl font-black text-sm transition-all
+                      ${hari === h ? "bg-[#00B9AD] text-white shadow-lg shadow-[#00B9AD]/20" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100"}`}>
+                    {h}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Tanggal</label>
+                <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)}
+                  className="border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all" />
+              </div>
+            </div>
+
+            {/* Form Input Makanan */}
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm space-y-5">
+              <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Tambah Item — Hari {hari}</h2>
+
+              {/* Waktu Makan */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Waktu Makan</label>
+                <div className="flex flex-wrap gap-2">
+                  {WAKTU_OPTIONS.map(w => (
+                    <button key={w} onClick={() => setWaktuMakan(w)}
+                      className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all
+                        ${waktuMakan === w ? "bg-[#00B9AD] text-white shadow-lg shadow-[#00B9AD]/20" : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100"}`}>
+                      {w}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Jam & Asal */}
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Jam Makan</label>
+                  <input type="time" value={jamMakan} onChange={e => setJamMakan(e.target.value)}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Asal Makanan</label>
+                  <div className="relative">
+                    <select value={asalMakanan} onChange={e => setAsalMakanan(e.target.value as AsalMakanan)}
+                      className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all appearance-none bg-white">
+                      {ASAL_OPTIONS.map(a => <option key={a}>{a}</option>)}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cari Makanan */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Cari Makanan</label>
+                <div className="relative">
+                  <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input type="text" value={searchMakanan}
+                    onChange={e => { setSearchMakanan(e.target.value); setShowMakananList(true); }}
+                    onFocus={() => setShowMakananList(true)}
+                    placeholder="Cth: Nasi, Ayam, Tempe..."
+                    className="w-full border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all placeholder:text-slate-300" />
+                </div>
+                {showMakananList && (
+                  <div className="mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
+                    {filteredMakanan.map(m => (
+                      <button key={m.id} onClick={() => {
+                        setSelectedMakanan(m);
+                        setSearchMakanan(m.nama);
+                        setSelectedPorsi(m.porsi && m.porsi.length > 0 ? m.porsi[0] : null);
+                        setShowMakananList(false);
+                      }} className="w-full text-left px-5 py-3 hover:bg-slate-50 transition-colors flex items-center justify-between group border-b border-slate-50 last:border-0">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                            {m.foto ? <img src={m.foto} alt={m.nama} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 font-black uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-900">{m.kode ? m.kode + " - " : ""}{m.nama}</div>
+                            <div className="text-[10px] text-slate-400 font-medium">{m.kategori?.nama || m.kategori_id} · {m.porsi?.length || 0} Porsi Variant</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-[#00B9AD] opacity-0 group-hover:opacity-100 font-black uppercase tracking-widest transition-opacity">Pilih</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pilih URT / Porsi */}
+              {selectedMakanan && (
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Varian Porsi</label>
+                  {selectedMakanan.porsi && selectedMakanan.porsi.length > 0 ? (
+                    <div className="flex gap-2 flex-wrap mb-3">
+                      {selectedMakanan.porsi.map(p => (
+                        <button key={p.id} onClick={() => setSelectedPorsi(p)}
+                          className={`px-4 py-3 rounded-2xl text-[11px] font-bold transition-all text-left flex-1 min-w-[140px]
+                            ${selectedPorsi?.id === p.id ? "bg-[#00B9AD] text-white shadow-lg shadow-[#00B9AD]/20 border-2 border-[#00B9AD]" : "bg-slate-50 text-slate-600 border-2 border-slate-100 hover:border-[#00B9AD] hover:bg-white"}`}>
+                          <span className="block">{p.nama_porsi}</span>
+                          <span className={`block mt-1 text-[9px] ${selectedPorsi?.id === p.id ? "text-white/80" : "text-slate-400"}`}>{p.berat_gram}g · {p.energi} kkal</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[11px] font-medium text-red-500 bg-red-50 px-4 py-3 rounded-xl border border-red-100">Makanan ini belum memiliki data porsi. Hubungi admin.</div>
+                  )}
+                </div>
+              )}
+
+              {/* Cara Pengolahan */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Cara Pengolahan</label>
+                <div className="flex flex-wrap gap-2">
+                  {CARA_OPTIONS.map(c => (
+                    <button key={c} onClick={() => setCaraPengolahan(c)}
+                      className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all
+                        ${caraPengolahan === c ? "bg-[#00B9AD] text-white shadow-lg shadow-[#00B9AD]/20" : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100"}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tambah Button */}
+              <button onClick={handleTambah} disabled={!selectedMakanan || !selectedPorsi || saving}
+                className="w-full bg-[#00B9AD] text-white font-black py-4 rounded-2xl hover:bg-[#00a69b] disabled:opacity-50 transition-all shadow-lg shadow-[#00B9AD]/20 flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                {saving ? <><Loader2 size={16} className="animate-spin" /> Menyimpan...</> : <><Plus size={18} /> Tambahkan</>}
               </button>
-            ))}
-          </div>
-          <div className="mt-3">
-            <label className="block text-xs font-semibold text-gray-500 mb-1">Tanggal</label>
-            <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-          </div>
-        </div>
-
-        {/* Form Input Makanan */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm space-y-4">
-          <h2 className="font-bold text-gray-900">Tambah Item Makanan — Hari {hari}</h2>
-
-          {/* Waktu Makan */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Waktu Makan</label>
-            <div className="flex flex-wrap gap-2">
-              {WAKTU_OPTIONS.map(w => (
-                <button key={w} onClick={() => setWaktuMakan(w)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
-                    ${waktuMakan === w ? "bg-primary text-white" : "bg-gray-50 text-gray-600 border border-gray-100 hover:border-primary/30"}`}>
-                  {w}
-                </button>
-              ))}
             </div>
           </div>
 
-          {/* Jam */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Jam Makan</label>
-              <input type="time" value={jamMakan} onChange={e => setJamMakan(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Asal Makanan</label>
-              <div className="relative">
-                <select value={asalMakanan} onChange={e => setAsalMakanan(e.target.value as AsalMakanan)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all appearance-none bg-white">
-                  {ASAL_OPTIONS.map(a => <option key={a}>{a}</option>)}
-                </select>
-                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-          </div>
-
-          {/* Pilih Makanan */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Cari Makanan</label>
-            <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" value={searchMakanan}
-                onChange={e => { setSearchMakanan(e.target.value); setShowMakananList(true); }}
-                onFocus={() => setShowMakananList(true)}
-                placeholder="Cth: Nasi, Ayam, Tempe..."
-                className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-            </div>
-            {showMakananList && (
-              <div className="mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                {filteredMakanan.map(m => (
-                  <button key={m.id} onClick={() => {
-                    setSelectedMakanan(m);
-                    setSearchMakanan(m.nama);
-                    setSelectedUrt(m.urt[0] ?? "");
-                    setShowMakananList(false);
-                  }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
-                        {m.foto ? <img src={m.foto} alt={m.nama} className="w-full h-full object-cover" /> : <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-gray-800">{m.nama}</div>
-                        <div className="text-xs text-gray-400">{m.kategori?.nama || m.kategori_id} · {m.energi} kkal/100g</div>
-                      </div>
-                    </div>
-                    <span className="text-xs text-primary opacity-0 group-hover:opacity-100 font-semibold transition-opacity">Pilih</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Pilih URT */}
-          {selectedMakanan && (
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Porsi (URT)</label>
-              <div className="flex gap-2 flex-wrap mb-2">
-                {selectedMakanan.urt.map(u => (
-                  <button key={u} onClick={() => setSelectedUrt(u)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
-                      ${selectedUrt === u ? "bg-primary text-white" : "bg-gray-50 text-gray-600 border border-gray-100 hover:border-primary/30"}`}>
-                    {u}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-3 mt-2">
-                <label className="text-xs font-semibold text-gray-500">Jumlah:</label>
-                <div className="flex items-center gap-2 bg-gray-50 rounded-xl border border-gray-100 px-3 py-1.5">
-                  <button onClick={() => setJumlahUrt(j => Math.max(0.5, j - 0.5))} className="text-gray-500 hover:text-primary font-bold text-lg leading-none">−</button>
-                  <span className="text-sm font-bold text-gray-900 min-w-8 text-center">{jumlahUrt}</span>
-                  <button onClick={() => setJumlahUrt(j => j + 0.5)} className="text-gray-500 hover:text-primary font-bold text-lg leading-none">+</button>
+          {/* Records List - Right Side */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm sticky top-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-[#00B9AD] flex items-center justify-center text-white shadow-lg shadow-[#00B9AD]/20">
+                  <ClipboardList size={20} />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 uppercase tracking-tight">Hari {hari}</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{recordsByHari.length} item tercatat</p>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Cara Pengolahan */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Cara Pengolahan</label>
-            <div className="flex flex-wrap gap-2">
-              {CARA_OPTIONS.map(c => (
-                <button key={c} onClick={() => setCaraPengolahan(c)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
-                    ${caraPengolahan === c ? "bg-primary text-white" : "bg-gray-50 text-gray-600 border border-gray-100 hover:border-primary/30"}`}>
-                  {c}
-                </button>
-              ))}
+              {loading ? (
+                <div className="text-center py-10"><Loader2 className="animate-spin inline text-slate-200" /></div>
+              ) : recordsByHari.length === 0 ? (
+                <div className="py-10 text-center text-sm text-slate-400 italic border-2 border-dashed border-slate-100 rounded-2xl">
+                  Belum ada catatan untuk Hari {hari}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recordsByHari.map(r => {
+                    const foto = makananList.find(m => m.id === r.makananId)?.foto;
+                    return (
+                    <div key={r.id} className="bg-slate-50 rounded-2xl border border-slate-100 px-4 py-3 flex items-center gap-3 group hover:border-[#00B9AD]/30 transition-all">
+                      <div className="relative shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 overflow-hidden flex items-center justify-center">
+                          {foto ? <img src={foto} alt={r.namaMakanan} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 font-black uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
+                        </div>
+                        <CheckCircle2 size={16} className="text-[#00B9AD] absolute -bottom-1 -right-1 bg-white rounded-full" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm text-slate-900 truncate group-hover:text-[#00B9AD] transition-colors">{r.namaMakanan}</div>
+                        <div className="text-[10px] text-slate-400 font-medium">{r.waktuMakan} · {r.jamMakan} · {r.namaPorsi || r.urt || "-"} · {r.caraPengolahan}</div>
+                      </div>
+                      <button onClick={() => handleDelete(r.id)} className="text-slate-300 hover:text-red-400 transition-colors shrink-0 p-2 rounded-xl hover:bg-red-50">
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  )})}
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Tambah */}
-          <button onClick={handleTambah} disabled={!selectedMakanan || !selectedUrt || saving}
-            className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2">
-            {saving ? <><Loader2 size={16} className="animate-spin" /> Menyimpan...</> : <><Plus size={18} /> Tambahkan</>}
-          </button>
         </div>
-
-        {/* List Record Hari Ini */}
-        <div>
-          <h3 className="font-bold text-gray-900 mb-3">Catatan Hari {hari} ({recordsByHari.length} item)</h3>
-          {loading ? (
-            <div className="text-center text-gray-400 py-8 text-sm">Memuat...</div>
-          ) : recordsByHari.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-100 py-10 text-center text-sm text-gray-400">
-              Belum ada catatan untuk Hari {hari}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recordsByHari.map(r => {
-                const foto = makananList.find(m => m.id === r.makananId)?.foto;
-                return (
-                <div key={r.id} className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3 shadow-sm">
-                  <div className="relative shrink-0">
-                    <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
-                      {foto ? <img src={foto} alt={r.namaMakanan} className="w-full h-full object-cover" /> : <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
-                    </div>
-                    <CheckCircle2 size={16} className="text-primary absolute -bottom-1 -right-1 bg-white rounded-full" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm text-gray-900 truncate">{r.namaMakanan}</div>
-                    <div className="text-xs text-gray-500">{r.waktuMakan} · {r.jamMakan} · {r.urt} · {r.caraPengolahan}</div>
-                  </div>
-                  <button onClick={() => handleDelete(r.id)} className="text-gray-300 hover:text-red-400 transition-colors shrink-0 p-1.5 rounded-lg hover:bg-red-50">
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              )})}
-            </div>
-          )}
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

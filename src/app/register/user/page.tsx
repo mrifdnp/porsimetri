@@ -27,6 +27,7 @@ export default function RegisterUserPage() {
 
   // Step 1: Akun
   const [namaLengkap, setNamaLengkap] = useState("");
+  const [noHp, setNoHp] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -66,6 +67,7 @@ export default function RegisterUserPage() {
         body: JSON.stringify({
           role: "user",
           namaLengkap,
+          noHp,
           email,
           password,
           profile: {
@@ -177,6 +179,11 @@ export default function RegisterUserPage() {
                     className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
                 </div>
                 <div className="group">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 group-focus-within:text-[#00B9AD]">No. WhatsApp / HP Aktif</label>
+                  <input type="tel" value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08xxxxxxxxxx"
+                    className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                </div>
+                <div className="group">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 group-focus-within:text-[#00B9AD]">Email Aktif</label>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="nama@perusahaan.com"
                     className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
@@ -207,6 +214,11 @@ export default function RegisterUserPage() {
                     <input type="text" value={pekerjaan} onChange={e => setPekerjaan(e.target.value)} placeholder="Cth: PNS"
                       className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
                   </div>
+                </div>
+                <div className="group">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 group-focus-within:text-[#00B9AD]">Alamat Lengkap</label>
+                  <textarea value={alamat} onChange={e => setAlamat(e.target.value)} placeholder="Masukkan alamat domisili" rows={2}
+                    className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-sm text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold resize-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="group">
@@ -261,8 +273,24 @@ export default function RegisterUserPage() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Sedang Diet?</label>
-                    <input type="text" value={statusDiet} onChange={e => setStatusDiet(e.target.value)} placeholder="Cth: Rendah Garam"
+                    <input type="text" value={statusDiet} onChange={e => setStatusDiet(e.target.value)} placeholder="Kosongkan jika tidak"
                       className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-xl px-4 py-3 text-xs text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all font-bold" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Pengobatan Rutin?</label>
+                    <div className="flex gap-2 mb-2">
+                      {[true, false].map(v => (
+                        <button key={String(v)} type="button" onClick={() => setAdaPengobatan(v)}
+                          className={`flex-1 py-3 rounded-xl border-2 font-black text-xs ${adaPengobatan === v ? "border-[#FFB74D] bg-[#FFF8E1] text-[#1E293B]" : "border-gray-50 text-gray-400"}`}>{v ? "YA" : "TIDAK"}</button>
+                      ))}
+                    </div>
+                    {adaPengobatan && (
+                      <input type="text" value={jenisPengobatan} onChange={e => setJenisPengobatan(e.target.value)} placeholder="Jenis obat yang dikonsumsi..."
+                        className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-xl px-4 py-3 text-xs text-[#1E293B] outline-none focus:bg-white focus:border-[#FFB74D] transition-all font-bold" />
+                    )}
                   </div>
                 </div>
 

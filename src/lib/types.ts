@@ -43,20 +43,30 @@ export interface KategoriMakanan {
   nama: string;
 }
 
-export interface MakananItem {
+export interface MakananPorsi {
   id: number;
+  makanan_id: number;
+  kode_porsi?: string;
+  nama_porsi: string;
+  berat_gram: number;
+  energi: number;
+  protein: number;
+  lemak: number;
+  karbohidrat: number;
+  serat: number;
+  deleted_at?: string;
+}
+
+export interface MakananInduk {
+  id: number;
+  kode?: string;
   nama: string;
   kategori_id: number;
   kategori?: KategoriMakanan; // Join table
-  jenis: "Bahan Makanan" | "Makanan Matang";
-  energi: number;
-  protein: number;
-  karbohidrat: number;
-  lemak: number;
-  serat: number;
-  urt: string[];
-  satuanGram: number;
+  keterangan?: string;
   foto: string | null;
+  porsi?: MakananPorsi[]; // Nested
+  deleted_at?: string;
 }
 
 export type WaktuMakan = "Pagi" | "Snack Pagi" | "Siang" | "Snack Siang" | "Malam" | "Snack Malam";
@@ -72,11 +82,14 @@ export interface FoodRecord {
   jamMakan: string; // HH:mm
   asalMakanan: AsalMakanan;
   makananId: number;
+  porsiId: number; // Baru
   namaMakanan: string;
-  urt: string;
-  jumlahUrt: number;
+  namaPorsi: string; // Baru untuk kemudahan
+  urt: string; // Bisa disimpan sbg legacy / untuk form
+  jumlahUrt: number; // Default: 1
   caraPengolahan: CaraPengolahan;
   createdAt: string;
+  deleted_at?: string;
 }
 
 export interface AnalisisGizi {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -112,15 +113,24 @@ export default function LoginPage() {
               <label className="block text-sm font-black text-[#1E293B] uppercase tracking-widest mb-3 transition-colors group-focus-within:text-[#00B9AD]">
                 Password
               </label>
+              <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Masukan Password"
-                className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all placeholder:text-gray-300 font-bold"
+                className="w-full bg-[#F5F5F7] border-2 border-transparent rounded-2xl px-6 py-4 pr-14 text-lg text-[#1E293B] outline-none focus:bg-white focus:border-[#00B9AD] transition-all placeholder:text-gray-300 font-bold"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00B9AD] transition-colors p-1"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between pt-2">
