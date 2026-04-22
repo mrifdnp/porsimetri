@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Search, Plus, Trash2, CheckCircle2,
-  ChevronDown, Loader2, ClipboardList
+  ChevronDown, Loader2, ClipboardList, ImageIcon
 } from "lucide-react";
 import UserSidebar from "@/components/UserSidebar";
 import type { FoodRecord, MakananInduk, MakananPorsi, WaktuMakan, AsalMakanan, CaraPengolahan } from "@/lib/types";
@@ -192,24 +192,39 @@ export default function FoodRecordPage() {
                 )}
               </div>
 
-              {/* Pilih URT / Porsi */}
+              {/* Preview Makanan & Pilih URT / Porsi */}
               {selectedMakanan && (
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Varian Porsi</label>
-                  {selectedMakanan.porsi && selectedMakanan.porsi.length > 0 ? (
-                    <div className="flex gap-2 flex-wrap mb-3">
-                      {selectedMakanan.porsi.map(p => (
-                        <button key={p.id} onClick={() => setSelectedPorsi(p)}
-                          className={`px-4 py-3 rounded-2xl text-[11px] font-bold transition-all text-left flex-1 min-w-[140px]
-                            ${selectedPorsi?.id === p.id ? "bg-[#00B9AD] text-white shadow-lg shadow-[#00B9AD]/20 border-2 border-[#00B9AD]" : "bg-slate-50 text-slate-600 border-2 border-slate-100 hover:border-[#00B9AD] hover:bg-white"}`}>
-                          <span className="block">{p.nama_porsi}</span>
-                          <span className={`block mt-1 text-[9px] ${selectedPorsi?.id === p.id ? "text-white/80" : "text-slate-400"}`}>{p.berat_gram}g · {p.energi} kkal</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-[11px] font-medium text-red-500 bg-red-50 px-4 py-3 rounded-xl border border-red-100">Makanan ini belum memiliki data porsi. Hubungi admin.</div>
-                  )}
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  {/* Foto Makanan */}
+                  <div className="w-full md:w-32 xl:w-40 aspect-square rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative">
+                    {selectedMakanan.foto ? (
+                      <img src={selectedMakanan.foto} alt={selectedMakanan.nama} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center opacity-50">
+                        <ImageIcon size={24} className="text-slate-400 mb-2" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">No Image</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Varian Porsi */}
+                  <div className="flex-1 w-full">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Varian Porsi</label>
+                    {selectedMakanan.porsi && selectedMakanan.porsi.length > 0 ? (
+                      <div className="flex gap-2 flex-wrap mb-3">
+                        {selectedMakanan.porsi.map(p => (
+                          <button key={p.id} onClick={() => setSelectedPorsi(p)}
+                            className={`px-4 py-3 rounded-2xl text-[11px] font-bold transition-all text-left flex-1 min-w-[140px]
+                              ${selectedPorsi?.id === p.id ? "bg-[#00B9AD] text-white shadow-lg shadow-[#00B9AD]/20 border-2 border-[#00B9AD]" : "bg-slate-50 text-slate-600 border-2 border-slate-100 hover:border-[#00B9AD] hover:bg-white"}`}>
+                            <span className="block">{p.nama_porsi}</span>
+                            <span className={`block mt-1 text-[9px] ${selectedPorsi?.id === p.id ? "text-white/80" : "text-slate-400"}`}>{p.berat_gram}g · {p.energi} kkal</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] font-medium text-red-500 bg-red-50 px-4 py-3 rounded-xl border border-red-100">Makanan ini belum memiliki data porsi. Hubungi admin.</div>
+                    )}
+                  </div>
                 </div>
               )}
 
