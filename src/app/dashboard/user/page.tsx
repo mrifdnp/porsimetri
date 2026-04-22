@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { FoodRecord, MakananInduk } from "@/lib/types";
 import Image from "next/image";
+import UserSidebar from "@/components/UserSidebar";
 
 const HARI_LABEL = ["Hari 1", "Hari 2", "Hari 3", "Hari 4", "Hari 5", "Hari 6", "Hari 7"];
 
@@ -39,9 +40,11 @@ export default function UserDashboard() {
     const filteredMakanan = selectedKategori ? makananList.filter(m => m.kategori?.nama === selectedKategori) : [];
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col pb-20 md:pb-0">
-            {/* Topbar */}
-            <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 md:px-8 h-16 flex items-center justify-between shadow-sm">
+        <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row pb-20 md:pb-0">
+            <UserSidebar />
+
+            {/* Mobile Topbar */}
+            <nav className="md:hidden sticky top-0 z-50 bg-white border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 relative shrink-0">
                         <Image 
@@ -70,7 +73,8 @@ export default function UserDashboard() {
                 </div>
             </nav>
 
-            <main className="max-w-3xl mx-auto w-full px-4 md:px-6 py-8 flex-1">
+            {/* Main Content */}
+            <main className="flex-1 min-w-0 px-4 md:px-8 py-8 w-full max-w-5xl mx-auto space-y-8">
                 {/* Salam */}
                 <div className="mb-8">
                     <h1 className="text-2xl font-extrabold text-gray-900">

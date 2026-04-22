@@ -21,7 +21,7 @@ export default function UserSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-72 border-r border-slate-200 flex flex-col bg-white h-screen sticky top-0 shrink-0">
+    <aside className="hidden md:flex w-72 border-r border-slate-200 flex-col bg-white h-screen sticky top-0 shrink-0">
       <div className="p-8">
         <div className="flex items-center gap-3 mb-12">
           <div className="w-10 h-10 relative shrink-0">
