@@ -7,14 +7,14 @@ import {
     Home, ClipboardList, BarChart3, LogOut, User,
     Heart, PlusCircle, CheckCircle2, Clock, ImageIcon
 } from "lucide-react";
-import type { FoodRecord, MakananItem } from "@/lib/types";
+import type { FoodRecord, MakananInduk } from "@/lib/types";
 
 const HARI_LABEL = ["Hari 1", "Hari 2", "Hari 3", "Hari 4", "Hari 5", "Hari 6", "Hari 7"];
 
 export default function UserDashboard() {
     const { data: session } = useSession();
     const [records, setRecords] = useState<FoodRecord[]>([]);
-    const [makananList, setMakananList] = useState<MakananItem[]>([]);
+    const [makananList, setMakananList] = useState<MakananInduk[]>([]);
     const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -160,8 +160,8 @@ export default function UserDashboard() {
                                         </div>
                                         <div className="p-3">
                                             <div className="font-bold text-gray-900 text-xs truncate" title={m.nama}>{m.nama}</div>
-                                            <div className="text-[10px] text-gray-500 mt-1 truncate" title={Array.isArray(m.urt) ? m.urt[0] : m.urt}>
-                                                {Array.isArray(m.urt) ? m.urt[0] : m.urt || '-'}
+                                            <div className="text-[10px] text-gray-500 mt-1 truncate" title={m.porsi?.map(p => p.nama_porsi).join(", ") || "-"}>
+                                                {m.porsi?.map(p => p.nama_porsi).join(", ") || "-"}
                                             </div>
                                         </div>
                                     </div>
