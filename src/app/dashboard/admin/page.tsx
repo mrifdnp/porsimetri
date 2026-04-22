@@ -97,10 +97,6 @@ export default function AdminDashboard() {
             <p className="text-slate-500 text-sm font-medium">Selamat datang kembali, {adminName || 'Admin'}</p>
           </div>
           
-          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400">
-            <Activity size={14} className="text-[#00B9AD]" />
-            System Live: 2026.04.15
-          </div>
         </header>
 
         {/* Stats Grid */}
@@ -124,14 +120,14 @@ export default function AdminDashboard() {
 
         {/* Quick Actions Card */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <Link href="/dashboard/admin/makanan" className="group bg-slate-900 rounded-[2.5rem] p-8 flex items-center justify-between transition-all hover:bg-[#00B9AD]">
+          <Link href="/dashboard/admin/makanan" className="group bg-primary rounded-[2.5rem] p-8 flex items-center justify-between transition-all hover:bg-primary-dark shadow-lg shadow-primary/10">
             <div className="flex items-center gap-6">
               <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-[#CDD729]">
                 <Database size={28} />
               </div>
               <div>
                 <h4 className="text-white font-black text-lg uppercase tracking-tight">Database Makanan</h4>
-                <p className="text-white/50 text-xs">Kelola nilai gizi & TKPI</p>
+                <p className="text-white/50 text-xs">Kelola nilai gizi</p>
               </div>
             </div>
             <ArrowUpRight className="text-white/20 group-hover:text-white transition-colors" />

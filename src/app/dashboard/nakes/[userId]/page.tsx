@@ -364,7 +364,7 @@ export default function NakesPasienPage({ params }: Props) {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={handleExportPDF}
-              className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-[#00B9AD] transition-all shadow-lg"
+              className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-dark transition-all shadow-lg"
             >
               <FileDown size={16} />
               Export PDF
@@ -410,7 +410,7 @@ export default function NakesPasienPage({ params }: Props) {
             <button 
               onClick={saveKebutuhan} 
               disabled={kSaving}
-              className="mt-8 flex items-center gap-3 px-8 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-[#00B9AD] transition-all shadow-xl shadow-slate-200 disabled:opacity-50"
+              className="mt-8 flex items-center gap-3 px-8 py-4 bg-primary text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-primary-dark transition-all shadow-xl shadow-primary/10 disabled:opacity-50"
             >
               {kSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               {kSuccess ? "Kebutuhan Terupdate" : "Simpan Baseline Gizi"}

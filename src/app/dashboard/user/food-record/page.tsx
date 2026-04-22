@@ -199,7 +199,7 @@ export default function FoodRecordPage() {
                     <div className="p-4 border-b border-slate-100 bg-slate-50 flex gap-2 overflow-x-auto scrollbar-hide">
                       <button 
                         onClick={() => setKategoriFilter("Semua")}
-                        className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-all ${kategoriFilter === "Semua" ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                        className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-all ${kategoriFilter === "Semua" ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
                       >
                         Semua
                       </button>

@@ -91,9 +91,7 @@ export default function NakesDashboard() {
               <div className="relative z-10">
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Total Aktif</p>
                 <h3 className="text-5xl font-black tracking-tighter mb-4">{users.length} Pasien</h3>
-                <div className="flex items-center gap-2 text-xs font-bold bg-white/10 w-fit px-3 py-1.5 rounded-full">
-                  <Calendar size={14} /> Berjalan Normal
-                </div>
+             
               </div>
               <Users size={140} className="absolute -right-8 -bottom-8 opacity-10 group-hover:scale-110 transition-transform duration-500" />
             </div>
@@ -101,7 +99,6 @@ export default function NakesDashboard() {
             <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 flex flex-col justify-center">
                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Records Masuk</p>
                <h3 className="text-5xl font-black text-slate-900 tracking-tighter">{records.length} <span className="text-lg text-slate-300">Data</span></h3>
-               <p className="text-xs font-bold text-[#00B9AD] mt-4 uppercase tracking-widest">Update Real-time</p>
             </div>
           </div>
 
