@@ -3,10 +3,10 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Search, Plus, Trash2, CheckCircle2,
-  ChevronDown, Loader2, ClipboardList, ImageIcon
+  ChevronDown, Loader2, ClipboardList, ImageIcon, Heart
 } from "lucide-react";
 import UserSidebar from "@/components/UserSidebar";
-import type { FoodRecord, MakananInduk, MakananPorsi, WaktuMakan, AsalMakanan, CaraPengolahan } from "@/lib/types";
+import type { FoodRecord, MakananInduk, MakananPorsi, WaktuMakan, AsalMakanan, CaraPengolahan, UserFavorite } from "@/lib/types";
 
 const WAKTU_OPTIONS: WaktuMakan[] = ["Pagi", "Snack Pagi", "Siang", "Snack Siang", "Malam", "Snack Malam"];
 const CARA_OPTIONS: CaraPengolahan[] = ["Goreng", "Kukus", "Rebus (air)", "Rebus (santan)", "Bakar", "Pan", "Panggang", "Tumis", "Air Fryer", "Tidak diolah"];  
@@ -15,6 +15,7 @@ const ASAL_OPTIONS: AsalMakanan[] = ["Memasak sendiri", "Membeli"];
 export default function FoodRecordPage() {
   const [makananList, setMakananList] = useState<MakananInduk[]>([]);
   const [records, setRecords] = useState<FoodRecord[]>([]);
+  const [favorites, setFavorites] = useState<UserFavorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -28,26 +29,49 @@ export default function FoodRecordPage() {
   const [searchMakanan, setSearchMakanan] = useState("");
   const [selectedMakanan, setSelectedMakanan] = useState<MakananInduk | null>(null);
   const [selectedPorsi, setSelectedPorsi] = useState<MakananPorsi | null>(null);
-  const [showMakananList, setShowMakananList] = useState(false);
+  const [showPilihMakanan, setShowPilihMakanan] = useState(false);
+  const [kategoriFilter, setKategoriFilter] = useState<string | number>("Semua");
 
   useEffect(() => {
     Promise.all([
       fetch("/api/food-record").then(r => r.json()),
-      fetch("/api/makanan").then(r => r.json())
+      fetch("/api/makanan").then(r => r.json()),
+      fetch("/api/user/favorit").then(r => r.json())
     ])
-      .then(([dbRecords, dbMakanan]) => {
+      .then(([dbRecords, dbMakanan, dbFavorites]) => {
         setRecords(Array.isArray(dbRecords) ? dbRecords : []);
         setMakananList(Array.isArray(dbMakanan) ? dbMakanan : []);
+        setFavorites(Array.isArray(dbFavorites) ? dbFavorites : []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
+  const categories = useMemo(() => {
+    const unique = new Map<number, string>();
+    makananList.forEach(m => {
+        if (m.kategori) unique.set(m.kategori.id, m.kategori.nama);
+    });
+    return Array.from(unique.entries()).map(([id, nama]) => ({ id, nama }));
+  }, [makananList]);
+
   const filteredMakanan = useMemo(() => {
-    if (!searchMakanan.trim()) return makananList.slice(0, 15);
-    const q = searchMakanan.toLowerCase();
-    return makananList.filter(m => m.nama.toLowerCase().includes(q)).slice(0, 20);
-  }, [searchMakanan, makananList]);
+    let filtered = makananList;
+    
+    if (kategoriFilter === "Favorit") {
+      const favIds = favorites.map(f => f.makananId);
+      filtered = filtered.filter(m => favIds.includes(m.id));
+    } else if (kategoriFilter !== "Semua") {
+      filtered = filtered.filter(m => m.kategori_id === kategoriFilter as number);
+    }
+
+    if (searchMakanan.trim()) {
+      const q = searchMakanan.toLowerCase();
+      filtered = filtered.filter(m => m.nama.toLowerCase().includes(q));
+    }
+
+    return filtered;
+  }, [searchMakanan, makananList, kategoriFilter, favorites]);
 
   const recordsByHari = records.filter(r => r.hari === hari);
 
@@ -158,36 +182,81 @@ export default function FoodRecordPage() {
 
               {/* Cari Makanan */}
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Cari Makanan</label>
-                <div className="relative">
-                  <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="text" value={searchMakanan}
-                    onChange={e => { setSearchMakanan(e.target.value); setShowMakananList(true); }}
-                    onFocus={() => setShowMakananList(true)}
-                    placeholder="Cth: Nasi, Ayam, Tempe..."
-                    className="w-full border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all placeholder:text-slate-300" />
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Pilih Makanan</label>
+                <div 
+                  className="flex items-center justify-between w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 cursor-pointer hover:bg-slate-50 transition-all"
+                  onClick={() => setShowPilihMakanan(!showPilihMakanan)}
+                >
+                  <span className={selectedMakanan ? "text-slate-900" : "text-slate-400"}>
+                    {selectedMakanan ? selectedMakanan.nama : "Cari dan pilih makanan..."}
+                  </span>
+                  <ChevronDown size={18} className={`text-slate-400 transition-transform ${showPilihMakanan ? "rotate-180" : ""}`} />
                 </div>
-                {showMakananList && (
-                  <div className="mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
-                    {filteredMakanan.map(m => (
-                      <button key={m.id} onClick={() => {
-                        setSelectedMakanan(m);
-                        setSearchMakanan(m.nama);
-                        setSelectedPorsi(m.porsi && m.porsi.length > 0 ? m.porsi[0] : null);
-                        setShowMakananList(false);
-                      }} className="w-full text-left px-5 py-3 hover:bg-slate-50 transition-colors flex items-center justify-between group border-b border-slate-50 last:border-0">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
-                            {m.foto ? <img src={m.foto} alt={m.nama} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 font-black uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
-                          </div>
-                          <div>
-                            <div className="text-sm font-bold text-slate-900">{m.kode ? m.kode + " - " : ""}{m.nama}</div>
-                            <div className="text-[10px] text-slate-400 font-medium">{m.kategori?.nama || m.kategori_id} · {m.porsi?.length || 0} Porsi Variant</div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] text-[#00B9AD] opacity-0 group-hover:opacity-100 font-black uppercase tracking-widest transition-opacity">Pilih</span>
+
+                {showPilihMakanan && (
+                  <div className="mt-3 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden flex flex-col">
+                    {/* Kategori Makanan */}
+                    <div className="p-4 border-b border-slate-100 bg-slate-50 flex gap-2 overflow-x-auto scrollbar-hide">
+                      <button 
+                        onClick={() => setKategoriFilter("Semua")}
+                        className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-all ${kategoriFilter === "Semua" ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                      >
+                        Semua
                       </button>
-                    ))}
+                      <button 
+                        onClick={() => setKategoriFilter("Favorit")}
+                        className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-all flex items-center gap-1 ${kategoriFilter === "Favorit" ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                      >
+                        <Heart size={12} className={kategoriFilter === "Favorit" ? "fill-white" : "text-rose-500"} /> Favorit
+                      </button>
+                      {categories.map(c => (
+                        <button 
+                          key={c.id} 
+                          onClick={() => setKategoriFilter(c.id)}
+                          className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-all ${kategoriFilter === c.id as number ? "bg-[#00B9AD] text-white shadow-md shadow-[#00B9AD]/20" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                        >
+                          {c.nama}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Input Pencarian */}
+                    <div className="p-4 border-b border-slate-100 relative">
+                      <Search size={15} className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input 
+                        type="text" 
+                        value={searchMakanan}
+                        onChange={e => setSearchMakanan(e.target.value)}
+                        placeholder="Cari makanan yang dipilih..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all placeholder:text-slate-400" 
+                      />
+                    </div>
+
+                    {/* Hasil Pencarian */}
+                    <div className="max-h-64 overflow-y-auto p-2 grid grid-cols-1 gap-2">
+                      {filteredMakanan.slice(0, 30).map(m => (
+                        <button key={m.id} onClick={() => {
+                          setSelectedMakanan(m);
+                          setSearchMakanan("");
+                          setSelectedPorsi(m.porsi && m.porsi.length > 0 ? m.porsi[0] : null);
+                          setShowPilihMakanan(false);
+                        }} className="w-full text-left px-3 py-3 rounded-xl border border-slate-100 hover:border-[#00B9AD]/50 hover:bg-slate-50 transition-colors flex items-center justify-between group">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                              {m.foto ? <img src={m.foto} alt={m.nama} className="w-full h-full object-cover" /> : <div className="text-[8px] text-slate-400 font-black uppercase tracking-wider text-center leading-tight">NO<br/>PIC</div>}
+                            </div>
+                            <div>
+                              <div className="text-sm font-bold text-slate-900 group-hover:text-[#00B9AD] transition-colors">{m.kode ? m.kode + " - " : ""}{m.nama}</div>
+                              <div className="text-[10px] text-slate-400 font-medium">{m.kategori?.nama || "Tanpa kategori"} · {m.porsi?.length || 0} Porsi Variant</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-[#00B9AD] opacity-0 group-hover:opacity-100 font-black uppercase tracking-widest transition-opacity px-3 py-1 bg-[#00B9AD]/10 rounded-lg">Pilih</span>
+                        </button>
+                      ))}
+                      {filteredMakanan.length === 0 && (
+                        <div className="text-center py-6 text-slate-400 text-sm font-medium">Makanan tidak ditemukan</div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

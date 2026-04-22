@@ -11,11 +11,11 @@ import UserSidebar from "@/components/UserSidebar";
 import type { FoodRecord, AnalisisGizi, KebutuhanGizi, HariSummary, MakananInduk } from "@/lib/types";
 
 const NUTRI_COLORS = {
-  energi: "#f472b6",
-  protein: "#34d399",
-  karbohidrat: "#fbbf24",
-  lemak: "#60a5fa",
-  serat: "#a78bfa",
+  energi: "#60C0D0",
+  protein: "#74D58C",
+  karbohidrat: "#CDD729",
+  lemak: "#00B9AD",
+  serat: "#2DD4BF",
 };
 
 function calcNutrisi(records: FoodRecord[], analisis: AnalisisGizi[], makananData: MakananInduk[]) {
@@ -310,7 +310,7 @@ export default function HasilPage() {
           </div>
           <button
             onClick={handleExportPDF}
-            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-[#00B9AD] transition-all shadow-lg w-fit"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-dark transition-all shadow-lg w-fit"
           >
             <FileDown size={16} />
             Export Data (PDF)
@@ -335,7 +335,7 @@ export default function HasilPage() {
                   onClick={() => setActiveTab("semua")}
                   className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
                     activeTab === "semua"
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
+                      ? "bg-primary text-white shadow-lg shadow-primary/20"
                       : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-50"
                   }`}
                 >
@@ -374,7 +374,7 @@ export default function HasilPage() {
           {/* Chart */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-10 shadow-sm">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: activeTab === "semua" ? "#0f172a" : NUTRI_COLORS[activeTab], boxShadow: `0 10px 25px -5px ${activeTab === "semua" ? "rgba(15, 23, 42, 0.3)" : NUTRI_COLORS[activeTab] + "33"}` }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: activeTab === "semua" ? "#00B9AD" : NUTRI_COLORS[activeTab], boxShadow: `0 10px 25px -5px ${activeTab === "semua" ? "rgba(0, 185, 173, 0.3)" : NUTRI_COLORS[activeTab] + "33"}` }}>
                   <TrendingUp size={20} />
                 </div>
                 <div>

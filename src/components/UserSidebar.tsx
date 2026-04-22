@@ -12,8 +12,8 @@ import Image from "next/image";
 
 const NAV_ITEMS = [
   { icon: Activity, label: "Overview", href: "/dashboard/user" },
+  { icon: ImageIcon, label: "Galeri Makanan", href: "/dashboard/user/galeri" },
   { icon: ClipboardList, label: "Catatan Makan", href: "/dashboard/user/food-record" },
-  { icon: Heart, label: "Makanan Favorit", href: "/dashboard/user/favorit" },
   { icon: BarChart3, label: "Hasil Analisis", href: "/dashboard/user/hasil" },
   { icon: User, label: "Profil Saya", href: "/dashboard/profile" },
 ];

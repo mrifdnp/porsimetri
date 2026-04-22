@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import AdminSidebar from "@/components/AdminSidebar"; // Import sidebar kamu
 import type { DbUser, FoodRecord } from "@/lib/types";
+import Image from "next/image";
 
 interface AccessLog {
   user_id: string;
@@ -60,12 +61,34 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] flex-col md:flex-row">
       {/* Sidebar dari component yang sudah ada */}
       <AdminSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 p-8 md:p-12 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-12 overflow-y-auto">
+        <nav className="md:hidden sticky top-0 z-50 bg-white border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm -mx-4 mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 relative shrink-0">
+              <Image
+                src="/logo-kemenkes-color.png"
+                alt="Logo Kemenkes"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="font-bold text-xl tracking-tighter">
+              <span className="text-[#60C0D0]">Porsi</span>
+              <span className="text-[#74D58C] -ml-0.5">Metri</span>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/profile"
+            className="text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-lg border border-slate-200"
+          >
+            Profil
+          </Link>
+        </nav>
         
         {/* Simple Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">

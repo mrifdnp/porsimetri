@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import {
     Home, ClipboardList, BarChart3, LogOut, User,
-    Heart, PlusCircle, CheckCircle2, Clock, ImageIcon
+    Heart, PlusCircle, CheckCircle2, Clock, ImageIcon, X, Search, SlidersHorizontal
 } from "lucide-react";
-import type { FoodRecord, MakananInduk } from "@/lib/types";
+import type { FoodRecord, MakananInduk, UserFavorite } from "@/lib/types";
 import Image from "next/image";
 import UserSidebar from "@/components/UserSidebar";
 
@@ -16,28 +16,72 @@ const HARI_LABEL = ["Hari 1", "Hari 2", "Hari 3", "Hari 4", "Hari 5", "Hari 6", 
 export default function UserDashboard() {
     const { data: session } = useSession();
     const [records, setRecords] = useState<FoodRecord[]>([]);
-    const [makananList, setMakananList] = useState<MakananInduk[]>([]);
-    const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [makananInduk, setMakananInduk] = useState<MakananInduk[]>([]);
+    const [favorites, setFavorites] = useState<UserFavorite[]>([]);
+    const [searchMakanan, setSearchMakanan] = useState("");
+    const [selectedKategori, setSelectedKategori] = useState("Semua");
+    const [zoomedMakanan, setZoomedMakanan] = useState<MakananInduk | null>(null);
 
     useEffect(() => {
-        Promise.all([
-            fetch("/api/food-record").then(r => r.json()),
-            fetch("/api/makanan").then(r => r.json())
-        ]).then(([recData, makData]) => {
-            setRecords(Array.isArray(recData) ? recData : []);
-            setMakananList(Array.isArray(makData) ? makData : []);
-            setLoading(false);
-        }).catch(() => setLoading(false));
+        // Fetch food records
+        fetch("/api/food-record")
+            .then(r => r.json())
+            .then(recData => {
+                setRecords(Array.isArray(recData) ? recData : []);
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
+
+        // Fetch master makanan
+        fetch("/api/makanan")
+            .then(r => r.json())
+            .then(data => setMakananInduk(Array.isArray(data) ? data : []));
+        
+        // Fetch favorites
+        fetch("/api/user/favorit")
+            .then(r => r.json())
+            .then(data => setFavorites(Array.isArray(data) ? data : []));
     }, []);
+
+    const toggleFavorite = async (e: React.MouseEvent, makananId: number) => {
+        e.stopPropagation();
+        const isFav = favorites.some(f => f.makananId === makananId);
+        
+        try {
+            const res = await fetch("/api/user/favorit", {
+                method: isFav ? "DELETE" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ makananId })
+            });
+
+            if (res.ok) {
+                if (isFav) {
+                    setFavorites(prev => prev.filter(f => f.makananId !== makananId));
+                } else {
+                    const newFav = await res.json();
+                    setFavorites(prev => [...prev, newFav]);
+                }
+            }
+        } catch (err) {
+            console.error("Gagal toggle favorite:", err);
+        }
+    };
+
+    const kategoriList = Array.from(new Set(makananInduk.map(m => m.kategori?.nama).filter(Boolean))) as string[];
+
+    const filteredMakanan = makananInduk.filter(m => {
+        const matchesSearch = m.nama.toLowerCase().includes(searchMakanan.toLowerCase());
+        if (selectedKategori === "Semua") return matchesSearch;
+        if (selectedKategori === "Favorit") {
+            return matchesSearch && favorites.some(f => f.makananId === m.id);
+        }
+        return matchesSearch && m.kategori?.nama === selectedKategori;
+    });
 
     const hariDiisi = new Set(records.map(r => r.hari)).size;
     const today = new Date().toISOString().split("T")[0];
     const todayRecords = records.filter(r => r.tanggal === today);
-
-    // Ambil daftar kategori unik dari data makanan yang ada
-    const kategoriList = Array.from(new Set(makananList.map(m => m.kategori?.nama).filter(Boolean)));
-    const filteredMakanan = selectedKategori ? makananList.filter(m => m.kategori?.nama === selectedKategori) : [];
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row pb-20 md:pb-0">
@@ -135,16 +179,51 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Galeri Menu / Porsi */}
-                <div className="mb-6">
+                <div className="mb-6" id="galeri">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="font-bold text-gray-900">Galeri Porsi Makanan</h2>
+                        <span className="text-[11px] text-gray-500 font-semibold">{filteredMakanan.length} menu</span>
+                    </div>
+                    <div className="mb-3 flex gap-2">
+                        <div className="relative flex-1">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                value={searchMakanan}
+                                onChange={(e) => setSearchMakanan(e.target.value)}
+                                placeholder="Cari makanan..."
+                                className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 shadow-sm"
+                            />
+                        </div>
+                        <button className="w-10 h-10 shrink-0 bg-[#CDD729] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#CDD729]/20 hover:scale-105 active:scale-95 transition-all">
+                            <Search size={18} />
+                        </button>
                     </div>
                     {/* List Kategori Makanan - Bisa distroll horizontal */}
                     <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide snap-x">
+                        <button
+                            onClick={() => setSelectedKategori("Semua")}
+                            className={`px-4 py-2 shrink-0 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-sm snap-start ${
+                                   selectedKategori === "Semua"
+                                    ? "bg-primary text-white ring-2 ring-primary/10"
+                                    : "bg-white text-gray-600 border border-gray-200 hover:border-slate-300"
+                            }`}
+                        >
+                            Semua
+                        </button>
+                        <button
+                            onClick={() => setSelectedKategori("Favorit")}
+                            className={`px-4 py-2 shrink-0 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-sm snap-start flex items-center gap-1.5 ${
+                                selectedKategori === "Favorit"
+                                    ? "bg-red-500 text-white ring-2 ring-red-500/20"
+                                    : "bg-white text-red-500 border border-gray-100 hover:border-red-200 hover:bg-red-50"
+                            }`}
+                        >
+                            <Heart size={14} fill={selectedKategori === "Favorit" ? "currentColor" : "none"} /> Favorit
+                        </button>
                         {kategoriList.map(kat => (
                             <button
                                 key={kat}
-                                onClick={() => setSelectedKategori(kat === selectedKategori ? null : kat as string)}
+                                onClick={() => setSelectedKategori(kat)}
                                 className={`px-4 py-2 shrink-0 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-sm snap-start ${
                                     kat === selectedKategori 
                                         ? "bg-primary text-white ring-2 ring-primary/20" 
@@ -157,35 +236,50 @@ export default function UserDashboard() {
                     </div>
 
                     {/* Grid Daftar Gambar Makanan */}
-                    {selectedKategori && (
-                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2">
-                            {filteredMakanan.length > 0 ? (
-                                filteredMakanan.map(m => (
-                                    <div key={m.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm flex flex-col group relative">
-                                        <div className="h-28 w-full bg-gray-50 flex items-center justify-center relative overflow-hidden">
-                                            {m.foto ? (
-                                                <img src={m.foto} alt={m.nama} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                            ) : (
-                                                <ImageIcon size={24} className="text-gray-300" />
-                                            )}
-                                            {/* Gradient Overlay biar teks bawahnya terbaca enak jika ada isi nanti */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                        </div>
-                                        <div className="p-3">
-                                            <div className="font-bold text-gray-900 text-xs truncate" title={m.nama}>{m.nama}</div>
-                                            <div className="text-[10px] text-gray-500 mt-1 truncate" title={m.porsi?.map(p => p.nama_porsi).join(", ") || "-"}>
-                                                {m.porsi?.map(p => p.nama_porsi).join(", ") || "-"}
-                                            </div>
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2">
+                        {loading ? (
+                            <div className="col-span-full py-8 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-xl">
+                                Memuat galeri...
+                            </div>
+                        ) : filteredMakanan.length > 0 ? (
+                            filteredMakanan.map(m => (
+                                <div
+                                    key={m.id}
+                                    className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm flex flex-col group relative cursor-pointer hover:border-primary/50 transition-all"
+                                    onClick={() => setZoomedMakanan(m)}
+                                >
+                                    <div className="h-28 w-full bg-gray-50 flex items-center justify-center relative overflow-hidden">
+                                        {m.foto ? (
+                                            <img src={m.foto} alt={m.nama} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        ) : (
+                                            <ImageIcon size={24} className="text-gray-300" />
+                                        )}
+                                        <button
+                                            onClick={(e) => toggleFavorite(e, m.id)}
+                                            className={`absolute top-2 right-2 p-1.5 rounded-full shadow-sm backdrop-blur-sm transition-all z-10 ${
+                                                favorites.some(f => f.makananId === m.id)
+                                                    ? "bg-red-500/10 text-red-500"
+                                                    : "bg-white/60 text-gray-400 hover:text-red-500 hover:bg-white"
+                                            }`}
+                                        >
+                                            <Heart size={16} fill={favorites.some(f => f.makananId === m.id) ? "currentColor" : "none"} />
+                                        </button>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    </div>
+                                    <div className="p-3">
+                                        <div className="font-bold text-gray-900 text-xs truncate" title={m.nama}>{m.nama}</div>
+                                        <div className="text-[10px] text-gray-500 mt-1 truncate" title={m.porsi?.map(p => p.nama_porsi).join(", ") || "-"}>
+                                            {m.porsi?.map(p => p.nama_porsi).join(", ") || "-"}
                                         </div>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="col-span-full py-8 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-xl">
-                                    Belum ada data untuk kategori ini.
                                 </div>
-                            )}
-                        </div>
-                    )}
+                            ))
+                        ) : (
+                            <div className="col-span-full py-8 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-xl">
+                                Tidak ada menu yang cocok dengan filter/pencarian.
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Catatan Hari Ini */}
@@ -222,25 +316,79 @@ export default function UserDashboard() {
                 </div>
             </main>
 
-            {/* Mobile Bottom Nav */}
-            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 px-6 py-3 flex justify-around items-center z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
-                <Link href="/dashboard/user" className="flex flex-col items-center gap-1 text-primary">
-                    <Home size={20} strokeWidth={2.5} />
-                    <span className="text-[10px] font-bold">Beranda</span>
-                </Link>
-                <Link href="/dashboard/user/food-record" className="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-colors">
-                    <ClipboardList size={20} strokeWidth={2} />
-                    <span className="text-[10px] font-medium">Catatan</span>
-                </Link>
-                <Link href="/dashboard/user/hasil" className="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-colors">
-                    <BarChart3 size={20} strokeWidth={2} />
-                    <span className="text-[10px] font-medium">Hasil</span>
-                </Link>
-                <button onClick={() => signOut({ callbackUrl: "/login" })} className="flex flex-col items-center gap-1 text-gray-400 hover:text-red-500 transition-colors">
-                    <User size={20} strokeWidth={2} />
-                    <span className="text-[10px] font-medium">Profil</span>
-                </button>
-            </nav>
+
+
+            {/* Modal Detail Porsi */}
+            {zoomedMakanan && (
+                <div
+                    className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center sm:p-4 animate-in fade-in"
+                    onClick={() => setZoomedMakanan(null)}
+                >
+                    <div
+                        className="bg-white w-full max-w-lg md:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden pointer-events-auto max-h-[90vh] flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="relative h-64 md:h-72 w-full bg-gray-100 shrink-0">
+                            {zoomedMakanan.foto ? (
+                                <img src={zoomedMakanan.foto} alt={zoomedMakanan.nama} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <ImageIcon size={48} className="text-gray-300" />
+                                </div>
+                            )}
+                            <button
+                                onClick={(e) => toggleFavorite(e as any, zoomedMakanan.id)}
+                                className={`absolute top-4 left-4 p-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all z-10 ${
+                                    favorites.some(f => f.makananId === zoomedMakanan.id)
+                                        ? "bg-red-500 text-white"
+                                        : "bg-white/70 text-gray-400 hover:text-red-500 hover:bg-white"
+                                }`}
+                            >
+                                <Heart size={20} fill={favorites.some(f => f.makananId === zoomedMakanan.id) ? "currentColor" : "none"} />
+                            </button>
+                            <button
+                                className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-md z-10"
+                                onClick={() => setZoomedMakanan(null)}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            <div className="mb-6">
+                                <h3 className="text-2xl font-extrabold text-gray-900 leading-tight">{zoomedMakanan.nama}</h3>
+                                {zoomedMakanan.kategori && (
+                                    <span className="inline-block mt-2 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-lg border border-primary/20">
+                                        {zoomedMakanan.kategori.nama}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Pilihan Porsi</h4>
+                                {zoomedMakanan.porsi?.map((porsi) => (
+                                    <div key={porsi.id} className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-2">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="font-bold text-gray-900 text-sm">{porsi.nama_porsi}</div>
+                                            <div className="text-xs text-gray-500">{porsi.berat_gram}g</div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-1 rounded">Energi: {porsi.energi} kkal</span>
+                                            <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-1 rounded">Karbo: {porsi.karbohidrat}g</span>
+                                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded">Protein: {porsi.protein}g</span>
+                                            <span className="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-1 rounded">Lemak: {porsi.lemak}g</span>
+                                            <span className="text-[10px] font-bold bg-cyan-100 text-cyan-800 px-2 py-1 rounded">Serat: {porsi.serat}g</span>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {(!zoomedMakanan.porsi || zoomedMakanan.porsi.length === 0) && (
+                                    <div className="text-sm text-gray-400 italic">Data porsi belum tersedia.</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

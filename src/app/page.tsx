@@ -25,10 +25,6 @@ export default function PorsiMetriLanding() {
           </div>
         </div>
 
-        <div className="hidden md:flex items-center text-[#1E293B] uppercase tracking-widest text-xs font-black">
-          Poltekkes Kemenkes Yogyakarta
-        </div>
-
 
 
         {/* Tombol LOGIN dengan warna #CDD729 */}
@@ -53,27 +49,12 @@ export default function PorsiMetriLanding() {
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
           <div className="w-full text-center md:text-left space-y-6">
-            <div className="text-xs uppercase tracking-[0.4em] font-black text-[#00B9AD]">01 — MISI KAMI</div>
             <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tighter text-[#1E293B]">
               Ciptakan Pola <br className="hidden md:block"/> Asupan <span className="text-[#00B9AD]">Terbaik.</span>
             </h1>
             <p className="text-[#64748B] text-lg max-w-xl mx-auto md:mx-0 font-medium leading-relaxed">
               Database nutrisi akurat persembahan Kemenkes Poltekkes Yogyakarta. Analisis energi dan komposisi gizi dalam satu genggaman.
             </p>
-
-            <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-4 max-w-md mx-auto md:mx-0">
-              {[
-                { name: "TKPI Terintegrasi", color: "text-[#CDD729]" },
-                { name: "Database Lokal", color: "text-[#74D58C]" },
-                { name: "Konsultasi Pakar", color: "text-[#60C0D0]" },
-                { name: "Laporan Akurat", color: "text-[#00B9AD]" },
-              ].map(item => (
-                <div key={item.name} className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#1E293B]">
-                  <div className={`w-2 h-2 rounded-full ${item.color.replace('text', 'bg')}`} />
-                  {item.name}
-                </div>
-              ))}
-            </div>
 
             <div className="pt-8 flex justify-center md:justify-start">
               <Link href="/login">
@@ -113,7 +94,7 @@ export default function PorsiMetriLanding() {
               </div>
             </div>
             <p className="text-xs text-[#64748B] font-medium max-w-xs uppercase tracking-widest">
-              Politeknik Kesehatan Kemenkes Yogyakarta. <br/>Data gizi estimasi per 100g sajian.
+              Politeknik Kesehatan Kemenkes Yogyakarta. 
             </p>
           </div>
 

@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 import NakesSidebar from "@/components/NakesSidebar";
 import type { DbUser, FoodRecord } from "@/lib/types";
+import Image from "next/image";
 
 export default function NakesDashboard() {
   const { data: session } = useSession();
@@ -30,12 +31,35 @@ export default function NakesDashboard() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] flex-col md:flex-row">
       <NakesSidebar />
 
       <main className="flex-1 min-w-0 pb-20">
+        <nav className="md:hidden sticky top-0 z-50 bg-white border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 relative shrink-0">
+              <Image
+                src="/logo-kemenkes-color.png"
+                alt="Logo Kemenkes"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="font-bold text-xl tracking-tighter">
+              <span className="text-[#60C0D0]">Porsi</span>
+              <span className="text-[#74D58C] -ml-0.5">Metri</span>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/profile"
+            className="text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-lg border border-slate-200"
+          >
+            Profil
+          </Link>
+        </nav>
+
         {/* Simple Topbar Content */}
-        <header className="h-20 bg-white border-b border-slate-200 px-10 flex items-center justify-between sticky top-0 z-40">
+        <header className="hidden md:flex h-20 bg-white border-b border-slate-200 px-10 items-center justify-between sticky top-0 z-40">
            <div className="flex items-center gap-4">
              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
                 <UserIcon size={20} />
@@ -54,7 +78,7 @@ export default function NakesDashboard() {
            </div>
         </header>
 
-        <div className="p-10 max-w-6xl">
+        <div className="p-4 md:p-10 max-w-6xl">
           {/* Welcome Text */}
           <div className="mb-10">
             <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Monitor Pasien.</h1>
