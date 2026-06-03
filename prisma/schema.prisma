@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid()) @map("id")
+  email        String    @unique @map("email")
+  passwordHash String    @map("password_hash")
+  role         String    @map("role") // "admin", "nakes", "user"
+  namaLengkap  String    @map("nama_lengkap")
+  noHp         String?   @map("no_hp")
+  profile      Json?     @map("profile") // JSON of UserProfile or NakesProfile
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  foodRecords   FoodRecord[]
+  kebutuhanGizi KebutuhanGizi[]
+  favorites     UserFavorite[]
+
+  @@map("users")
+}
+
+model KategoriMakanan {
+  id   Int    @id @default(autoincrement()) @map("id")
+  nama String @map("nama")
+
+  makanan MakananInduk[]
+
+  @@map("kategori_makanan")
+}
+
+model MakananInduk {
+  id         Int       @id @default(autoincrement()) @map("id")
+  kode       String?   @map("kode")
+  nama       String    @map("nama")
+  kategoriId Int       @map("kategori_id")
+  keterangan String?   @map("keterangan")
+  foto       String?   @map("foto")
+  deletedAt  DateTime? @map("deleted_at")
+
+  kategori  KategoriMakanan @relation(fields: [kategoriId], references: [id])
+  porsi     MakananPorsi[]
+  favorites UserFavorite[]
+
+  @@map("makanan_induk")
+}
+
+model MakananPorsi {
+  id          Int       @id @default(autoincrement()) @map("id")
+  makananId   Int       @map("makanan_id")
+  kodePorsi   String?   @map("kode_porsi")
+  namaPorsi   String    @map("nama_porsi")
+  beratGram   Float     @map("berat_gram")
+  energi      Float     @map("energi")
+  protein     Float     @map("protein")
+  lemak       Float     @map("lemak")
+  karbohidrat Float     @map("karbohidrat")
+  serat       Float     @map("serat")
+  deletedAt   DateTime? @map("deleted_at")
+
+  makanan MakananInduk @relation(fields: [makananId], references: [id])
+
+  @@map("makanan_porsi")
+}
+
+model FoodRecord {
+  id             String    @id @default(uuid()) @map("id")
+  userId         String    @map("user_id")
+  tanggal        String    @map("tanggal") // YYYY-MM-DD
+  hari           Int       @map("hari")
+  waktuMakan     String    @map("waktu_makan")
+  jamMakan       String    @map("jam_makan") // HH:mm
+  asalMakanan    String    @map("asal_makanan")
+  makananId      Int       @map("makanan_id")
+  porsiId        Int       @map("porsi_id")
+  namaMakanan    String    @map("nama_makanan")
+  namaPorsi      String    @map("nama_porsi")
+  urt            String    @map("urt")
+  jumlahUrt      Float     @map("jumlah_urt")
+  caraPengolahan String    @map("cara_pengolahan")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  user         User          @relation(fields: [userId], references: [id])
+  analisisGizi AnalisisGizi?
+
+  @@map("food_records")
+}
+
+model AnalisisGizi {
+  id           String   @id @default(uuid()) @map("id")
+  foodRecordId String   @unique @map("food_record_id")
+  nakesId      String   @map("nakes_id")
+  energi       Float    @map("energi")
+  protein      Float    @map("protein")
+  lemak        Float    @map("lemak")
+  karbohidrat  Float    @map("karbohidrat")
+  serat        Float    @map("serat")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  foodRecord FoodRecord @relation(fields: [foodRecordId], references: [id])
+
+  @@map("analisis_gizi")
+}
+
+model KebutuhanGizi {
+  id          String   @id @default(uuid()) @map("id")
+  userId      String   @map("user_id")
+  nakesId     String   @map("nakes_id")
+  energi      Float    @map("energi")
+  protein     Float    @map("protein")
+  lemak       Float    @map("lemak")
+  karbohidrat Float    @map("karbohidrat")
+  serat       Float    @map("serat")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("kebutuhan_gizi")
+}
+
+model UserFavorite {
+  id        String   @id @default(uuid()) @map("id")
+  userId    String   @map("user_id")
+  makananId Int      @map("makanan_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User         @relation(fields: [userId], references: [id])
+  makanan MakananInduk @relation(fields: [makananId], references: [id])
+
+  @@unique([userId, makananId])
+  @@map("user_favorites")
+}
