@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { MakananInduk, MakananPorsi } from "@/lib/types";
-import { supabase } from "@/lib/supabase";
 
 export default function AdminMakananPage() {
   const [makanan, setMakanan] = useState<MakananInduk[]>([]);
@@ -67,24 +66,27 @@ export default function AdminMakananPage() {
     let fotoUrl = null;
 
     if (fotoFile) {
-      const ext = fotoFile.name.split(".").pop();
-      const fileName = `makanan_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("makanan_images")
-        .upload(fileName, fotoFile);
+      const formData = new FormData();
+      formData.append("file", fotoFile);
+      formData.append("folder", "makanan_images");
 
-      if (uploadError) {
-        alert("Gagal upload foto: " + uploadError.message);
+      try {
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Gagal upload foto");
+        }
+        
+        const uploadData = await uploadRes.json();
+        fotoUrl = uploadData.url;
+      } catch (err: any) {
+        alert("Gagal upload foto: " + err.message);
         setSaving(false);
         return;
       }
-
-      const { data: urlData } = supabase.storage
-        .from("makanan_images")
-        .getPublicUrl(uploadData.path);
-        
-      fotoUrl = urlData.publicUrl;
     }
 
     const payload = {
@@ -169,8 +171,8 @@ export default function AdminMakananPage() {
   useEffect(() => {
     Promise.all([
       fetch("/api/makanan").then(r => r.json()),
-      supabase.from("kategori_makanan").select("*").order("id", { ascending: true })
-    ]).then(([dbMakanan, { data: dbKategori }]) => {
+      fetch("/api/kategori").then(r => r.json())
+    ]).then(([dbMakanan, dbKategori]) => {
       setMakanan(Array.isArray(dbMakanan) ? dbMakanan : []);
       setKategoriList(dbKategori || []);
       if (dbKategori && dbKategori.length > 0) {

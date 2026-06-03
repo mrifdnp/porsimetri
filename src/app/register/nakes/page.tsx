@@ -39,23 +39,22 @@ export default function RegisterNakesPage() {
   }
 
   async function uploadFile(file: File, folder: string): Promise<string | null> {
-    const ext = file.name.split(".").pop();
-    const fileName = `${folder}_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-    
-    // Import supabase on the fly or ensure it's imported at the top
-    const { supabase } = await import("@/lib/supabase");
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("dokumen_nakes")
-      .upload(fileName, file);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folder);
 
-    if (uploadError) throw new Error("Gagal upload " + folder + ": " + uploadError.message);
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-    const { data: urlData } = supabase.storage
-      .from("dokumen_nakes")
-      .getPublicUrl(uploadData.path);
-      
-    return urlData.publicUrl;
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error("Gagal upload " + folder + ": " + (errorData.error || "Unknown error"));
+    }
+
+    const data = await res.json();
+    return data.url;
   }
 
   async function handleSubmit() {

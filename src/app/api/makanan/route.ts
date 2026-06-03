@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from('makanan_induk')
-    .select('*, kategori:kategori_makanan(*), porsi:makanan_porsi(*)')
-    .is('deleted_at', null);
-  
-  // Filter out soft-deleted porsi explicitly just in case
-  const filteredData = (data || []).map(item => ({
+  const data = await prisma.makananInduk.findMany({
+    where: { deletedAt: null },
+    include: {
+      kategori: true,
+      porsi: {
+        where: { deletedAt: null }
+      }
+    }
+  });
+
+  // Map to Supabase-like format just in case frontend relies on exact snake_case fields
+  const filteredData = data.map(item => ({
     ...item,
-    porsi: item.porsi ? item.porsi.filter((p: any) => p.deleted_at === null) : []
+    kategori_id: item.kategoriId,
+    kategori: item.kategori,
+    porsi: item.porsi.map(p => ({
+      ...p,
+      makanan_id: p.makananId,
+      kode_porsi: p.kodePorsi,
+      nama_porsi: p.namaPorsi,
+      berat_gram: p.beratGram
+    }))
   }));
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(filteredData);
 }
 
@@ -27,30 +39,36 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { kode, nama, kategori_id, keterangan, foto, porsi } = body;
 
-  const { data: newItem, error } = await supabase
-    .from('makanan_induk')
-    .insert({ kode, nama, kategori_id, keterangan, foto })
-    .select()
-    .single();
+  try {
+    const newItem = await prisma.makananInduk.create({
+      data: {
+        kode,
+        nama,
+        kategoriId: kategori_id,
+        keterangan,
+        foto
+      }
+    });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  if (porsi && Array.isArray(porsi) && porsi.length > 0) {
-    const porsiToInsert = porsi.map((p: any) => ({
-      makanan_id: newItem.id,
-      kode_porsi: p.kode_porsi,
-      nama_porsi: p.nama_porsi,
-      berat_gram: p.berat_gram,
-      energi: p.energi || 0,
-      protein: p.protein || 0,
-      lemak: p.lemak || 0,
-      karbohidrat: p.karbohidrat || 0,
-      serat: p.serat || 0,
-    }));
-    await supabase.from('makanan_porsi').insert(porsiToInsert);
+    if (porsi && Array.isArray(porsi) && porsi.length > 0) {
+      const porsiToInsert = porsi.map((p: any) => ({
+        makananId: newItem.id,
+        kodePorsi: p.kode_porsi,
+        namaPorsi: p.nama_porsi,
+        beratGram: p.berat_gram,
+        energi: p.energi || 0,
+        protein: p.protein || 0,
+        lemak: p.lemak || 0,
+        karbohidrat: p.karbohidrat || 0,
+        serat: p.serat || 0,
+      }));
+      await prisma.makananPorsi.createMany({ data: porsiToInsert });
+    }
+    
+    return NextResponse.json(newItem, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  
-  return NextResponse.json(newItem, { status: 201 });
 }
 
 export async function PUT(req: NextRequest) {
@@ -64,50 +82,53 @@ export async function PUT(req: NextRequest) {
 
   if (!id) return NextResponse.json({ error: "ID is required for update" }, { status: 400 });
 
-  const { data: updatedItem, error } = await supabase
-    .from('makanan_induk')
-    .update({ kode, nama, kategori_id, keterangan, foto })
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    const updatedItem = await prisma.makananInduk.update({
+      where: { id },
+      data: { kode, nama, kategoriId: kategori_id, keterangan, foto }
+    });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (porsi && Array.isArray(porsi)) {
+      const existingPorsi = await prisma.makananPorsi.findMany({ where: { makananId: id } });
+      const existingIds = existingPorsi.map(ep => ep.id);
+      
+      const incomingIds = porsi.map((p: any) => p.id).filter(pid => pid);
+      const toDelete = existingIds.filter(eid => !incomingIds.includes(eid));
+      
+      if (toDelete.length > 0) {
+        await prisma.makananPorsi.updateMany({
+          where: { id: { in: toDelete } },
+          data: { deletedAt: new Date() }
+        });
+      }
 
-  if (porsi && Array.isArray(porsi)) {
-    // Very simple sync logic: hard delete old porsis and reinsert (since Admin replaces list)
-    // Wait, no! If we hard delete Porsi, past food_records referencing porsi_id will be orphaned!
-    // We should soft-delete the ones not in the request, or just update existing, insert new.
-    
-    // Get existing porsi
-    const { data: existingPorsi } = await supabase.from('makanan_porsi').select('id').eq('makanan_id', id);
-    const existingIds = existingPorsi?.map(ep => ep.id) || [];
-    
-    const incomingIds = porsi.map((p: any) => p.id).filter(id => id);
-    const toDelete = existingIds.filter(id => !incomingIds.includes(id));
-    
-    if (toDelete.length > 0) {
-      await supabase.from('makanan_porsi').update({ deleted_at: new Date().toISOString() }).in('id', toDelete);
-    }
-
-    for (const p of porsi) {
-      const pData = {
-        makanan_id: id,
-        kode_porsi: p.kode_porsi,
-        nama_porsi: p.nama_porsi,
-        berat_gram: p.berat_gram,
-        energi: p.energi || 0,
-        protein: p.protein || 0,
-        lemak: p.lemak || 0,
-        karbohidrat: p.karbohidrat || 0,
-        serat: p.serat || 0,
-      };
-      if (p.id) {
-         await supabase.from('makanan_porsi').update(pData).eq('id', p.id);
-      } else {
-         await supabase.from('makanan_porsi').insert(pData);
+      for (const p of porsi) {
+        const pData = {
+          makananId: id,
+          kodePorsi: p.kode_porsi,
+          namaPorsi: p.nama_porsi,
+          beratGram: p.berat_gram,
+          energi: p.energi || 0,
+          protein: p.protein || 0,
+          lemak: p.lemak || 0,
+          karbohidrat: p.karbohidrat || 0,
+          serat: p.serat || 0,
+        };
+        if (p.id) {
+           await prisma.makananPorsi.update({
+             where: { id: p.id },
+             data: pData
+           });
+        } else {
+           await prisma.makananPorsi.create({
+             data: pData
+           });
+        }
       }
     }
-  }
 
-  return NextResponse.json(updatedItem, { status: 200 });
+    return NextResponse.json(updatedItem, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

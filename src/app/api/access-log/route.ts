@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -38,15 +38,19 @@ export async function POST(req: NextRequest) {
     // Jika gagal geolocation, tetap simpan log tanpa lokasi
   }
 
-  const { error } = await supabase.from("access_logs").insert({
-    user_id: session.user.id,
-    ip_address: ip,
-    city,
-    region,
-    country,
-    logged_at: new Date().toISOString(),
-  });
+  try {
+    await prisma.accessLog.create({
+      data: {
+        userId: session.user.id,
+        ipAddress: ip,
+        city,
+        region,
+        country
+      }
+    });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

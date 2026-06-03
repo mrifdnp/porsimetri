@@ -21,6 +21,7 @@ model User {
   foodRecords   FoodRecord[]
   kebutuhanGizi KebutuhanGizi[]
   favorites     UserFavorite[]
+  accessLogs    AccessLog[]
 
   @@map("users")
 }
@@ -135,4 +136,18 @@ model UserFavorite {
 
   @@unique([userId, makananId])
   @@map("user_favorites")
+}
+
+model AccessLog {
+  id        String   @id @default(uuid()) @map("id")
+  userId    String   @map("user_id")
+  ipAddress String?  @map("ip_address")
+  city      String?  @map("city")
+  region    String?  @map("region")
+  country   String?  @map("country")
+  loggedAt  DateTime @default(now()) @map("logged_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("access_logs")
 }

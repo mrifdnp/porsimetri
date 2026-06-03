@@ -1,39 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userId = session.user?.id as string;
   
-  const { data, error } = await supabase
-    .from('food_records')
-    .select('*')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
-    
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const data = await prisma.foodRecord.findMany({
+      where: { userId, deletedAt: null }
+    });
 
-  const mapped = (data || []).map((db: any) => ({
-    id: db.id,
-    userId: db.user_id,
-    tanggal: db.tanggal,
-    hari: db.hari,
-    waktuMakan: db.waktu_makan,
-    jamMakan: db.jam_makan,
-    asalMakanan: db.asal_makanan,
-    makananId: db.makanan_id,
-    porsiId: db.porsi_id,
-    namaMakanan: db.nama_makanan,
-    namaPorsi: db.nama_porsi,
-    urt: db.urt,
-    jumlahUrt: db.jumlah_urt || 1,
-    caraPengolahan: db.cara_pengolahan,
-    createdAt: db.created_at
-  }));
+    const mapped = data.map((db) => ({
+      id: db.id,
+      userId: db.userId,
+      tanggal: db.tanggal,
+      hari: db.hari,
+      waktuMakan: db.waktuMakan,
+      jamMakan: db.jamMakan,
+      asalMakanan: db.asalMakanan,
+      makananId: db.makananId,
+      porsiId: db.porsiId,
+      namaMakanan: db.namaMakanan,
+      namaPorsi: db.namaPorsi,
+      urt: db.urt,
+      jumlahUrt: db.jumlahUrt || 1,
+      caraPengolahan: db.caraPengolahan,
+      createdAt: db.createdAt.toISOString()
+    }));
 
-  return NextResponse.json(mapped);
+    return NextResponse.json(mapped);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -44,42 +44,38 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const { data: newRecord, error } = await supabase
-      .from('food_records')
-      .insert({
-        user_id: userId,
+    const newRecord = await prisma.foodRecord.create({
+      data: {
+        userId: userId,
         tanggal: body.tanggal,
         hari: body.hari,
-        waktu_makan: body.waktuMakan,
-        jam_makan: body.jamMakan,
-        asal_makanan: body.asalMakanan,
-        makanan_id: body.makananId,
-        porsi_id: body.porsiId,
-        nama_makanan: body.namaMakanan,
-        nama_porsi: body.namaPorsi,
+        waktuMakan: body.waktuMakan,
+        jamMakan: body.jamMakan,
+        asalMakanan: body.asalMakanan,
+        makananId: body.makananId,
+        porsiId: body.porsiId,
+        namaMakanan: body.namaMakanan,
+        namaPorsi: body.namaPorsi,
         urt: body.urt || body.namaPorsi || "1 Porsi",
-        jumlah_urt: body.jumlahUrt || 1,
-        cara_pengolahan: body.caraPengolahan
-      })
-      .select()
-      .single();
+        jumlahUrt: body.jumlahUrt || 1,
+        caraPengolahan: body.caraPengolahan
+      }
+    });
 
-    if (error) throw error;
-    
     const mappedRecord = {
       id: newRecord.id,
-      userId: newRecord.user_id,
+      userId: newRecord.userId,
       tanggal: newRecord.tanggal,
       hari: newRecord.hari,
-      waktuMakan: newRecord.waktu_makan,
-      jamMakan: newRecord.jam_makan,
-      asalMakanan: newRecord.asal_makanan,
-      makananId: newRecord.makanan_id,
-      namaMakanan: newRecord.nama_makanan,
+      waktuMakan: newRecord.waktuMakan,
+      jamMakan: newRecord.jamMakan,
+      asalMakanan: newRecord.asalMakanan,
+      makananId: newRecord.makananId,
+      namaMakanan: newRecord.namaMakanan,
       urt: newRecord.urt,
-      jumlahUrt: newRecord.jumlah_urt,
-      caraPengolahan: newRecord.cara_pengolahan,
-      createdAt: newRecord.created_at
+      jumlahUrt: newRecord.jumlahUrt,
+      caraPengolahan: newRecord.caraPengolahan,
+      createdAt: newRecord.createdAt.toISOString()
     };
 
     return NextResponse.json(mappedRecord, { status: 201 });

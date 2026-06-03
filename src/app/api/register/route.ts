@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,25 +16,22 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 10);
     
-    const { data: newUser, error } = await supabase
-      .from('users')
-      .insert({
-        email,
-        password_hash: passwordHash,
-        role,
-        nama_lengkap: namaLengkap,
-        no_hp: noHp || null,
-        profile: profile || null,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === '23505') { // Postgres error code untuk UNIQUE constraint violation
-        return NextResponse.json({ error: "Email sudah terdaftar" }, { status: 409 });
-      }
-      throw error;
+    // Cek duplikasi email manual untuk menangani pesan error
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return NextResponse.json({ error: "Email sudah terdaftar" }, { status: 409 });
     }
+
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        role,
+        namaLengkap,
+        noHp: noHp || null,
+        profile: profile || null,
+      }
+    });
 
     return NextResponse.json({ success: true, id: newUser.id }, { status: 201 });
   } catch (err: any) {

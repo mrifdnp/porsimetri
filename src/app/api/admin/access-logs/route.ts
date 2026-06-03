@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await auth();
@@ -8,13 +8,22 @@ export async function GET() {
   const role = (session.user as { role?: string })?.role;
   if (role !== "admin" && role !== "nakes") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // Ambil log akses terbaru per user (last login + lokasi)
-  const { data, error } = await supabase
-    .from("access_logs")
-    .select("*")
-    .order("logged_at", { ascending: false })
-    .limit(500);
+  try {
+    // Ambil log akses terbaru per user (last login + lokasi)
+    const data = await prisma.accessLog.findMany({
+      orderBy: { loggedAt: "desc" },
+      take: 500
+    });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data || []);
+    const mappedData = data.map(log => ({
+      ...log,
+      user_id: log.userId,
+      ip_address: log.ipAddress,
+      logged_at: log.loggedAt.toISOString()
+    }));
+
+    return NextResponse.json(mappedData);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

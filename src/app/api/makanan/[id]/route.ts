@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
@@ -13,12 +13,14 @@ export async function DELETE(
   
   const { id } = await params;
 
-  const { error } = await supabase
-    .from('makanan_induk')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', Number(id));
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  
-  return NextResponse.json({ success: true });
+  try {
+    await prisma.makananInduk.update({
+      where: { id: Number(id) },
+      data: { deletedAt: new Date() }
+    });
+    
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

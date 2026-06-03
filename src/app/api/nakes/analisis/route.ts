@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -12,29 +12,36 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Hapus analisis lama untuk food record yang sama (soft delete) sebelum insert baru
-    await supabase
-      .from('analisis_gizi')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('food_record_id', body.foodRecordId);
+    const existingAnalisis = await prisma.analisisGizi.findUnique({
+      where: { foodRecordId: body.foodRecordId }
+    });
 
-    const { data: entry, error } = await supabase
-      .from('analisis_gizi')
-      .insert({
-        food_record_id: body.foodRecordId,
-        nakes_id: nakesId,
+    if (existingAnalisis) {
+      await prisma.analisisGizi.delete({
+        where: { foodRecordId: body.foodRecordId }
+      });
+    }
+
+    const entry = await prisma.analisisGizi.create({
+      data: {
+        foodRecordId: body.foodRecordId,
+        nakesId: nakesId,
         energi: Number(body.energi),
         protein: Number(body.protein),
         lemak: Number(body.lemak),
         karbohidrat: Number(body.karbohidrat),
         serat: Number(body.serat),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
+      }
+    });
     
-    return NextResponse.json(entry, { status: 201 });
+    // Map response for backwards compatibility
+    const mappedEntry = {
+      ...entry,
+      food_record_id: entry.foodRecordId,
+      nakes_id: entry.nakesId
+    };
+
+    return NextResponse.json(mappedEntry, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }

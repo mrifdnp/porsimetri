@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
@@ -13,20 +13,25 @@ export async function GET(
   
   const { userId } = await params;
   
-  const { data, error } = await supabase
-    .from('kebutuhan_gizi')
-    .select('*')
-    .eq('user_id', userId)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+  try {
+    const data = await prisma.kebutuhanGizi.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
 
-  if (error && error.code !== 'PGRST116') {
+    if (!data) return NextResponse.json(null);
+
+    const mappedData = {
+      ...data,
+      user_id: data.userId,
+      nakes_id: data.nakesId,
+      created_at: data.createdAt.toISOString()
+    };
+
+    return NextResponse.json(mappedData);
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  return NextResponse.json(data || null);
 }
 
 export async function POST(
@@ -43,27 +48,26 @@ export async function POST(
   try {
     const body = await req.json();
     
-    // Sama halnya dengan file di atas, jika ingin hanya ada satu kebutuhan per user,
-    // kita bisa mendelete yang lama atau biarkan saja history-nya menumpuk dan GET data terbaru.
-    // Di sini kita biarkan menumpuk seperti versi aslinya.
-    
-    const { data: entry, error } = await supabase
-      .from('kebutuhan_gizi')
-      .insert({
-        user_id: userId,
-        nakes_id: nakesId,
+    const entry = await prisma.kebutuhanGizi.create({
+      data: {
+        userId: userId,
+        nakesId: nakesId,
         energi: Number(body.energi),
         protein: Number(body.protein),
         lemak: Number(body.lemak),
         karbohidrat: Number(body.karbohidrat),
         serat: Number(body.serat)
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
+      }
+    });
     
-    return NextResponse.json(entry, { status: 201 });
+    const mappedEntry = {
+      ...entry,
+      user_id: entry.userId,
+      nakes_id: entry.nakesId,
+      created_at: entry.createdAt.toISOString()
+    };
+
+    return NextResponse.json(mappedEntry, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }

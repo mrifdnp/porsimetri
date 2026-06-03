@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
@@ -11,22 +11,23 @@ export async function DELETE(
   const userId = session.user?.id as string;
   const { id } = await params;
   
-  // Periksa apakah record tersebut ada dan milik user (atau admin yang hapus jika mau)
-  const { data: record, error: fetchError } = await supabase
-    .from('food_records')
-    .select('user_id')
-    .eq('id', id)
-    .single();
+  try {
+    const record = await prisma.foodRecord.findUnique({
+      where: { id }
+    });
 
-  if (fetchError || !record) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (record.user_id !== userId && (session.user as any)?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  
-  const { error: deleteError } = await supabase
-    .from('food_records')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id);
+    if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (record.userId !== userId && (session.user as any)?.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    
+    await prisma.foodRecord.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
 
-  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
-  
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
