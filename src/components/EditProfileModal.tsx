@@ -56,56 +56,85 @@ export default function EditProfileModal({ profile, isUser }: { profile: any, is
             </div>
             
             <div className="p-6 overflow-y-auto flex-1">
-              <form id="edit-profile" onSubmit={handleSubmit} className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Berat Badan (kg)</label>
-                    <input 
-                      type="number" step="0.1" required
-                      value={formData.beratBadan || ""}
-                      onChange={e => setFormData({ ...formData, beratBadan: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    />
+              <form id="edit-profile" onSubmit={handleSubmit} className="space-y-6">
+                
+                {/* Physical Data */}
+                <div>
+                  <h3 className="text-sm font-black text-gray-800 border-b pb-2 mb-4">Data Fisik & Umum</h3>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Berat Badan (kg)</label>
+                      <input type="number" step="0.1" required value={formData.beratBadan || ""} onChange={e => setFormData({ ...formData, beratBadan: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tinggi Badan (cm)</label>
+                      <input type="number" step="0.1" required value={formData.tinggiBadan || ""} onChange={e => setFormData({ ...formData, tinggiBadan: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tinggi Badan (cm)</label>
-                    <input 
-                      type="number" step="0.1" required
-                      value={formData.tinggiBadan || ""}
-                      onChange={e => setFormData({ ...formData, tinggiBadan: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    />
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tanggal Lahir</label>
+                      <input type="date" value={formData.tanggalLahir || ""} onChange={e => setFormData({ ...formData, tanggalLahir: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Pekerjaan</label>
+                      <input type="text" value={formData.pekerjaan || ""} onChange={e => setFormData({ ...formData, pekerjaan: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Alamat Lengkap</label>
+                    <textarea rows={2} value={formData.alamat || ""} onChange={e => setFormData({ ...formData, alamat: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tingkat Aktivitas Fisik</label>
+                    <select value={formData.tingkatAktivitas || "Ringan"} onChange={e => setFormData({ ...formData, tingkatAktivitas: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                      <option>Sangat Ringan</option>
+                      <option>Ringan</option>
+                      <option>Sedang</option>
+                      <option>Berat</option>
+                    </select>
                   </div>
                 </div>
 
+                {/* Medical Data */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tingkat Aktivitas</label>
-                  <select 
-                    value={formData.tingkatAktivitas || "Ringan"}
-                    onChange={e => setFormData({ ...formData, tingkatAktivitas: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  >
-                    <option>Sangat Ringan</option>
-                    <option>Ringan</option>
-                    <option>Sedang</option>
-                    <option>Berat</option>
-                  </select>
+                  <h3 className="text-sm font-black text-gray-800 border-b pb-2 mb-4">Data Riwayat Medis</h3>
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Status Diet Khusus</label>
+                    <input type="text" value={formData.statusDiet || ""} onChange={e => setFormData({ ...formData, statusDiet: e.target.value })} placeholder="Kosongkan jika tidak ada" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Pernah Konsultasi Gizi?</label>
+                      <select value={formData.riwayatKonsultasiGizi ? "true" : "false"} onChange={e => setFormData({ ...formData, riwayatKonsultasiGizi: e.target.value === "true" })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none">
+                        <option value="true">Ya</option>
+                        <option value="false">Tidak</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Kepesertaan Prolanis?</label>
+                      <select value={formData.kepesertaanProlanis ? "true" : "false"} onChange={e => setFormData({ ...formData, kepesertaanProlanis: e.target.value === "true" })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none">
+                        <option value="true">Ya</option>
+                        <option value="false">Tidak</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Pengobatan Rutin</label>
+                    <div className="flex gap-2">
+                      <select value={formData.pengobatanRutin?.ada ? "true" : "false"} onChange={e => setFormData({ ...formData, pengobatanRutin: { ...formData.pengobatanRutin, ada: e.target.value === "true" } })} className="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none">
+                        <option value="true">Ada</option>
+                        <option value="false">Tidak Ada</option>
+                      </select>
+                      {formData.pengobatanRutin?.ada && (
+                        <input type="text" placeholder="Jenis Obat" value={formData.pengobatanRutin?.jenis || ""} onChange={e => setFormData({ ...formData, pengobatanRutin: { ...formData.pengobatanRutin, jenis: e.target.value } })} className="w-2/3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                      )}
+                    </div>
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Status Diet Khusus</label>
-                  <select 
-                    value={formData.statusDiet || "Tidak Ada"}
-                    onChange={e => setFormData({ ...formData, statusDiet: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  >
-                    <option>Tidak Ada</option>
-                    <option>Diet Rendah Kalori</option>
-                    <option>Diet Rendah Garam</option>
-                    <option>Diet Diabetes</option>
-                    <option>Diet Jantung</option>
-                  </select>
-                </div>
+
               </form>
             </div>
 

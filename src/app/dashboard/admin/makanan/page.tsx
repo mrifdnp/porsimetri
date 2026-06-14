@@ -243,7 +243,31 @@ export default function AdminMakananPage() {
                         <input name="nama" value={form.nama} onChange={handleChange} placeholder="Nasi Putih" className="w-full bg-slate-50 border-2 border-transparent focus:border-[#00B9AD] rounded-2xl px-5 py-3 text-sm font-bold outline-none transition-all" />
                       </div>
                       <div className="space-y-1.5 md:col-span-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Kategori</label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Kategori</label>
+                          <button type="button" onClick={async () => {
+                            const nama = prompt("Masukkan nama kategori baru:");
+                            if (!nama) return;
+                            try {
+                              const res = await fetch("/api/kategori", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ nama })
+                              });
+                              if (res.ok) {
+                                const newCat = await res.json();
+                                setKategoriList(prev => [...prev, newCat]);
+                                setForm(prev => ({ ...prev, kategori: newCat.id.toString() }));
+                              } else {
+                                alert("Gagal menambahkan kategori");
+                              }
+                            } catch (e) {
+                              alert("Terjadi kesalahan");
+                            }
+                          }} className="text-[9px] font-black uppercase text-[#00B9AD] hover:bg-[#00B9AD]/10 px-2 py-0.5 rounded transition-all">
+                            + Kategori Baru
+                          </button>
+                        </div>
                         <select name="kategori" value={form.kategori} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent focus:border-[#00B9AD] rounded-2xl px-5 py-3 text-sm font-bold outline-none transition-all">
                             <option value="">Pilih Kategori</option>
                               {kategoriList.map((k: any) => <option key={k.id} value={k.id}>{k.nama}</option>)}
