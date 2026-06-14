@@ -55,6 +55,7 @@ export default function AdminMakananPage() {
 
   const handleSubmit = async () => {
     if (!form.nama) return alert("Nama makanan wajib diisi");
+    if (!form.kategori) return alert("Kategori makanan wajib dipilih");
     if (porsiList.length === 0) return alert("Minimal harus ada 1 varian porsi");
     
     // Validate porsi

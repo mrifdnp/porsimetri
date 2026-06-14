@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { kode, nama, kategori_id, keterangan, foto, porsi } = body;
 
+  if (!kategori_id) return NextResponse.json({ error: "Kategori wajib diisi" }, { status: 400 });
+
   try {
     const newItem = await prisma.makananInduk.create({
       data: {
