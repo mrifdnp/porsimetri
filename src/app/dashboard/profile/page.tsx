@@ -66,7 +66,7 @@ export default async function ProfilePage() {
 
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest">Informasi Spesifik</h2>
-            <EditProfileModal profile={p} isUser={isUser} />
+            <EditProfileModal profile={p} isUser={isUser} isNakes={isNakes} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -101,6 +101,13 @@ export default async function ProfilePage() {
                 <div className="md:col-span-2 mt-4 space-y-4">
                   <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 border-t border-gray-100 pt-6">Dokumen Validasi</h3>
                   <div className="flex flex-col md:flex-row gap-4">
+                    {p.dokumenKTP ? (
+                       <a href={p.dokumenKTP} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-between p-4 rounded-2xl border border-[#00B9AD] bg-[#00B9AD]/5 text-[#00B9AD] font-bold text-sm hover:bg-[#00B9AD]/10 transition-colors">
+                         Lihat Dokumen KTP
+                         <ArrowLeft className="rotate-[135deg]" size={16}/>
+                       </a>
+                    ) : <div className="flex-1 p-4 rounded-2xl bg-gray-50 text-gray-400 text-sm font-semibold border border-gray-100">KTP Belum Terupload</div>}
+
                     {p.dokumenSTR ? (
                        <a href={p.dokumenSTR} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-between p-4 rounded-2xl border border-[#00B9AD] bg-[#00B9AD]/5 text-[#00B9AD] font-bold text-sm hover:bg-[#00B9AD]/10 transition-colors">
                          Lihat Dokumen STR

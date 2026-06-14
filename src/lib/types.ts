@@ -25,6 +25,7 @@ export interface NakesProfile {
   alamatInstansi?: string;
   dokumenSTR?: string;
   dokumenSIP?: string;
+  dokumenKTP?: string;
 }
 
 export interface DbUser {
