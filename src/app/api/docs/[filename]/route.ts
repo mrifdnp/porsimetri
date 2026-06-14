@@ -5,6 +5,10 @@ import { join } from "path";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ filename: string }> }) {
   try {
     const session = await auth();
