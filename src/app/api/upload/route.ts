@@ -15,12 +15,15 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    const isPrivate = data.get("isPrivate") === "true";
+
     // Dapatkan ekstensi file (default .bin jika tidak ada ekstensi)
     const ext = file.name.split('.').pop() || "bin";
     const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
-    // Buat direktori public/uploads jika belum ada
-    const uploadDir = join(process.cwd(), "public", "uploads");
+    // Tentukan direktori berdasarkan isPrivate
+    const baseFolder = isPrivate ? "private" : "public";
+    const uploadDir = join(process.cwd(), baseFolder, "uploads");
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
     }
@@ -29,8 +32,8 @@ export async function POST(req: NextRequest) {
     const path = join(uploadDir, filename);
     await writeFile(path, buffer);
 
-    // Kembalikan URL publik ke file
-    const url = `/uploads/${filename}`;
+    // Kembalikan URL publik atau URL private docs
+    const url = isPrivate ? `/api/docs/${filename}` : `/uploads/${filename}`;
 
     return NextResponse.json({ success: true, url }, { status: 201 });
   } catch (error: any) {

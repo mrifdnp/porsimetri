@@ -22,6 +22,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email sudah terdaftar" }, { status: 409 });
     }
 
+    const userProfile = profile || {};
+    if (role === "nakes") {
+      userProfile.isVerified = false;
+    }
+
     const newUser = await prisma.user.create({
       data: {
         email,
@@ -29,7 +34,7 @@ export async function POST(req: NextRequest) {
         role,
         namaLengkap,
         noHp: noHp || null,
-        profile: profile || null,
+        profile: userProfile,
       }
     });
 

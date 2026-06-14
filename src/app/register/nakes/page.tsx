@@ -29,12 +29,14 @@ export default function RegisterNakesPage() {
   const [alamatInstansi, setAlamatInstansi] = useState("");
 
   // Step 3: Upload Dokumen
+  const [ktpFile, setKtpFile] = useState<File | null>(null);
   const [strFile, setStrFile] = useState<File | null>(null);
   const [sipFile, setSipFile] = useState<File | null>(null);
 
-  function handleFileChange(type: "str" | "sip", file: File | null) {
+  function handleFileChange(type: "ktp" | "str" | "sip", file: File | null) {
     if (!file) return;
-    if (type === "str") setStrFile(file);
+    if (type === "ktp") setKtpFile(file);
+    else if (type === "str") setStrFile(file);
     else setSipFile(file);
   }
 
@@ -42,6 +44,7 @@ export default function RegisterNakesPage() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("folder", folder);
+    formData.append("isPrivate", "true");
 
     const res = await fetch("/api/upload", {
       method: "POST",
@@ -61,9 +64,16 @@ export default function RegisterNakesPage() {
     setError("");
     setLoading(true);
     try {
-      let urlSTR, urlSIP;
+      if (!ktpFile) {
+        setError("KTP wajib diupload.");
+        setLoading(false);
+        return;
+      }
+
+      let urlKTP, urlSTR, urlSIP;
       
       // Upload file directly if selected
+      urlKTP = await uploadFile(ktpFile, "KTP");
       if (strFile) urlSTR = await uploadFile(strFile, "STR");
       if (sipFile) urlSIP = await uploadFile(sipFile, "SIP");
 
@@ -82,6 +92,7 @@ export default function RegisterNakesPage() {
             lamaBekerja,
             instansi,
             alamatInstansi,
+            dokumenKTP: urlKTP,
             dokumenSTR: urlSTR || undefined,
             dokumenSIP: urlSIP || undefined,
           },
@@ -244,10 +255,11 @@ export default function RegisterNakesPage() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Dokumen Kompetensi</h2>
-                <p className="text-sm text-gray-500">Upload STR dan SIP untuk verifikasi</p>
+                <p className="text-sm text-gray-500">Upload KTP, STR, dan SIP untuk verifikasi</p>
               </div>
 
               {[
+                { label: "KTP (Kartu Tanda Penduduk) *wajib", id: "n-ktp", type: "ktp" as const, file: ktpFile },
                 { label: "STR (Surat Tanda Registrasi)", id: "n-str", type: "str" as const, file: strFile },
                 { label: "SIP (Surat Izin Praktik)", id: "n-sip", type: "sip" as const, file: sipFile },
               ].map(doc => (

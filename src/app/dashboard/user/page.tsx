@@ -127,30 +127,13 @@ export default function UserDashboard() {
                     <p className="text-gray-500 text-sm mt-1">Pantau asupan gizi harianmu di sini</p>
                 </div>
 
-                {/* Progress 7 Hari */}
+                {/* Progress Hari */}
                 <div className="bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl p-6 mb-6 shadow-lg shadow-primary/20">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <div className="text-white/80 text-sm font-medium mb-0.5">Progress Pencatatan</div>
-                            <div className="text-2xl font-extrabold">{hariDiisi} / 7 Hari</div>
+                            <div className="text-white/80 text-sm font-medium mb-0.5">Total Hari</div>
+                            <div className="text-2xl font-extrabold">{hariDiisi} Hari Tercatat</div>
                         </div>
-                        <div className="w-14 h-14 rounded-full border-4 border-white/30 flex items-center justify-center">
-                            <span className="text-xl font-extrabold">{Math.round((hariDiisi / 7) * 100)}%</span>
-                        </div>
-                    </div>
-                    <div className="flex gap-1.5">
-                        {HARI_LABEL.map((_, i) => {
-                            const filled = records.some(r => r.hari === i + 1);
-                            return (
-                                <div key={i} className={`flex-1 h-2.5 rounded-full transition-all
-                  ${filled ? "bg-white" : "bg-white/25"}`} />
-                            );
-                        })}
-                    </div>
-                    <div className="flex justify-between mt-1.5">
-                        {HARI_LABEL.map((l, i) => (
-                            <span key={i} className="text-[9px] text-white/70 font-semibold">{i + 1}</span>
-                        ))}
                     </div>
                 </div>
 

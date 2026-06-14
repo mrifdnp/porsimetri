@@ -164,9 +164,36 @@ export default function FoodRecordPage() {
               {/* Jam & Asal */}
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Jam Makan</label>
-                  <input type="time" value={jamMakan} onChange={e => setJamMakan(e.target.value)}
-                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all" />
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Jam Makan (24 Jam)</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <select 
+                        value={jamMakan.split(':')[0] || '07'} 
+                        onChange={e => setJamMakan(`${e.target.value}:${jamMakan.split(':')[1] || '00'}`)}
+                        className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all appearance-none bg-white text-center"
+                      >
+                        {Array.from({ length: 24 }).map((_, i) => {
+                          const val = i.toString().padStart(2, "0");
+                          return <option key={val} value={val}>{val}</option>;
+                        })}
+                      </select>
+                      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                    <span className="text-slate-400 font-bold self-center">:</span>
+                    <div className="relative flex-1">
+                      <select 
+                        value={jamMakan.split(':')[1] || '00'} 
+                        onChange={e => setJamMakan(`${jamMakan.split(':')[0] || '07'}:${e.target.value}`)}
+                        className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-[#00B9AD]/20 focus:border-[#00B9AD] transition-all appearance-none bg-white text-center"
+                      >
+                        {Array.from({ length: 60 }).map((_, i) => {
+                          const val = i.toString().padStart(2, "0");
+                          return <option key={val} value={val}>{val}</option>;
+                        })}
+                      </select>
+                      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
                 <div className="flex-1">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Asal Makanan</label>

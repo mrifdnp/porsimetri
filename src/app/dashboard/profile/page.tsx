@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, User as UserIcon, Mail, Phone, Calendar, Briefcase, Activity, Shield, Award, MapPin, ArrowLeft } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 import NakesSidebar from "@/components/NakesSidebar";
+import EditProfileModal from "@/components/EditProfileModal";
 import type { DbUser, UserProfile, NakesProfile } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -63,7 +64,10 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-6">Informasi Spesifik</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest">Informasi Spesifik</h2>
+            <EditProfileModal profile={p} isUser={isUser} />
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             {isUser && p && (

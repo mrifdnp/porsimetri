@@ -50,6 +50,24 @@ export default function AdminUsersPage() {
     });
   }
 
+  // Modal State
+  const [selectedUser, setSelectedUser] = useState<DbUser | null>(null);
+  const [verifying, setVerifying] = useState(false);
+
+  async function handleVerify(userId: string) {
+    setVerifying(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/verify`, { method: "POST" });
+      if (res.ok) {
+        setUsers(users.map(u => u.id === userId ? { ...u, profile: { ...(u.profile as any), isVerified: true } } : u));
+        setSelectedUser(null);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setVerifying(false);
+  }
+
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
     return u.namaLengkap.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
@@ -103,12 +121,16 @@ export default function AdminUsersPage() {
               ) : (
                 filtered.map((u) => {
                   const lastAccess = getLastAccess(u.id);
+                  const isNakesUnverified = u.role === 'nakes' && !(u.profile as any)?.isVerified;
                   return (
                   <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 border border-slate-200">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 border border-slate-200 relative">
                           {u.namaLengkap.charAt(0)}
+                          {isNakesUnverified && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-slate-900 leading-none mb-1">{u.namaLengkap}</p>
@@ -146,8 +168,8 @@ export default function AdminUsersPage() {
                       </p>
                     </td>
                     <td className="px-6 py-4 text-right text-slate-400">
-                      <button className="hover:text-slate-900 transition-colors">
-                        <MoreVertical size={18} />
+                      <button onClick={() => setSelectedUser(u)} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition-colors">
+                        Detail
                       </button>
                     </td>
                   </tr>
@@ -164,6 +186,60 @@ export default function AdminUsersPage() {
           )}
         </div>
       </main>
+
+      {/* Modal Detail User */}
+      {selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+            <h2 className="text-xl font-black text-slate-900 mb-6">Detail Pengguna</h2>
+            <div className="space-y-4 mb-8">
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">Nama Lengkap</p>
+                <p className="text-sm font-medium text-slate-900">{selectedUser.namaLengkap}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">Email</p>
+                <p className="text-sm font-medium text-slate-900">{selectedUser.email}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">No HP</p>
+                <p className="text-sm font-medium text-slate-900">{selectedUser.noHp || "-"}</p>
+              </div>
+
+              {selectedUser.role === 'nakes' && (
+                <div className="pt-4 border-t border-slate-100">
+                  <h3 className="text-sm font-black text-slate-900 mb-3">Dokumen Nakes</h3>
+                  <div className="space-y-2">
+                    {['dokumenKTP', 'dokumenSTR', 'dokumenSIP'].map(doc => {
+                      const url = (selectedUser.profile as any)?.[doc];
+                      return url ? (
+                        <a key={doc} href={url} target="_blank" rel="noreferrer" className="block p-3 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors">
+                          Lihat {doc.replace('dokumen', '')}
+                        </a>
+                      ) : (
+                        <div key={doc} className="block p-3 bg-slate-50 text-slate-400 rounded-xl text-xs font-medium italic">
+                          {doc.replace('dokumen', '')} belum diupload
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setSelectedUser(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                Tutup
+              </button>
+              {selectedUser.role === 'nakes' && !(selectedUser.profile as any)?.isVerified && (
+                <button onClick={() => handleVerify(selectedUser.id)} disabled={verifying} className="flex-1 py-3 bg-[#00B9AD] text-white font-bold rounded-xl hover:bg-[#009b91] disabled:opacity-50 transition-colors">
+                  {verifying ? "Loading..." : "Verifikasi"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

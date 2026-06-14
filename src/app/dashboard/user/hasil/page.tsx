@@ -231,7 +231,7 @@ export default function HasilPage() {
           <td>${(Math.round(totals.serat*10)/10).toFixed(1)}</td>
         </tr>
         ${kebutuhanTotal ? `<tr class="footer-row">
-          <td colspan="7" style="text-align:right;font-weight:800">Kebutuhan Zat Gizi (7 hari)</td>
+          <td colspan="7" style="text-align:right;font-weight:800">Kebutuhan Zat Gizi Harian</td>
           <td>${kebutuhanTotal.energi}</td>
           <td>${kebutuhanTotal.protein}</td>
           <td>${kebutuhanTotal.lemak}</td>
@@ -306,7 +306,7 @@ export default function HasilPage() {
         <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Hasil Analisis Gizi</h1>
-            <p className="text-slate-400 font-medium">Grafik dan ringkasan asupan gizi harian selama 7 hari.</p>
+            <p className="text-slate-400 font-medium">Grafik dan ringkasan tren asupan gizi harian.</p>
           </div>
           <button
             onClick={handleExportPDF}
@@ -382,7 +382,7 @@ export default function HasilPage() {
                     {activeTab === "semua" ? "Grafik Pemenuhan Gizi Harian" : `Grafik ${NUTRI_LIST.find(n => n.key === activeTab)?.label}`}
                   </h3>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    {activeTab === "semua" ? "Kombinasi Seluruh Makronutrien" : "Asupan harian 7 hari"}
+                    {activeTab === "semua" ? "Kombinasi Seluruh Makronutrien" : "Tren asupan harian"}
                   </p>
                 </div>
               </div>
@@ -427,7 +427,7 @@ export default function HasilPage() {
             {/* Tabel Kesimpulan */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-8 py-6">
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Tabel Kesimpulan Gizi (7 Hari)</h3>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Tabel Kesimpulan Gizi Harian</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">

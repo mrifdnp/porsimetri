@@ -8,9 +8,9 @@ export const runtime = "nodejs";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  if (!session) redirect("/login");
+  if (!session?.user) redirect("/login");
 
-  const role = (session.user as any).role || "user";
+  const role = (session.user as any)?.role || "user";
 
   return (
     <SessionProvider session={session}>
