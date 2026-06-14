@@ -61,6 +61,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ file
     return new NextResponse(fileBuffer, {
       headers: {
         "Content-Type": contentType,
+        "Cache-Control": "private, no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
       },
     });
 
