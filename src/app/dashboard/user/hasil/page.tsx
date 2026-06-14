@@ -56,6 +56,7 @@ export default function HasilPage() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"semua" | "energi" | "protein" | "lemak" | "karbohidrat" | "serat">("semua");
+  const [exportType, setExportType] = useState<string>("mingguan");
 
   useEffect(() => {
     Promise.all([
@@ -84,6 +85,7 @@ export default function HasilPage() {
     const totals = { energi: 0, protein: 0, lemak: 0, karbo: 0, serat: 0 };
 
     for (let h = 1; h <= 7; h++) {
+      if (exportType !== "mingguan" && h !== parseInt(exportType)) continue;
       const hRecs = records.filter(r => r.hari === h);
       for (const r of hRecs) {
         const a = analisis.find(x => x.foodRecordId === r.id);
@@ -121,12 +123,13 @@ export default function HasilPage() {
       }
     }
 
+    const faktor = exportType === "mingguan" ? 7 : 1;
     const kebutuhanTotal = kebutuhan ? {
-      energi: kebutuhan.energi * 7,
-      protein: kebutuhan.protein * 7,
-      lemak: kebutuhan.lemak * 7,
-      karbo: kebutuhan.karbohidrat * 7,
-      serat: kebutuhan.serat * 7,
+      energi: kebutuhan.energi * faktor,
+      protein: kebutuhan.protein * faktor,
+      lemak: kebutuhan.lemak * faktor,
+      karbo: kebutuhan.karbohidrat * faktor,
+      serat: kebutuhan.serat * faktor,
     } : null;
 
     const pct = kebutuhanTotal ? {
@@ -197,7 +200,7 @@ export default function HasilPage() {
         <div class="info-row"><span class="info-label">Tinggi Badan</span><span class="info-colon">:</span><span class="info-value">${tb}</span></div>
         <br/>
         <div class="info-row"><span class="info-label">Pekerjaan</span><span class="info-colon">:</span><span class="info-value">${pekerjaan}</span></div>
-        <div class="info-row"><span class="info-label">Periode catat</span><span class="info-colon">:</span><span class="info-value">(diisi hari ke: 1/2/3/4/5/6/7 dan tanggal)</span></div>
+        <div class="info-row"><span class="info-label">Periode catat</span><span class="info-colon">:</span><span class="info-value">${exportType === "mingguan" ? "(diisi hari ke: 1/2/3/4/5/6/7 dan tanggal)" : `Hari ke-${exportType}`}</span></div>
       </div>
     </div>
     <table>
@@ -231,7 +234,7 @@ export default function HasilPage() {
           <td>${(Math.round(totals.serat*10)/10).toFixed(1)}</td>
         </tr>
         ${kebutuhanTotal ? `<tr class="footer-row">
-          <td colspan="7" style="text-align:right;font-weight:800">Kebutuhan Zat Gizi Harian</td>
+          <td colspan="7" style="text-align:right;font-weight:800">Kebutuhan Zat Gizi \${exportType === "mingguan" ? "(7 Hari)" : "(Harian)"}</td>
           <td>${kebutuhanTotal.energi}</td>
           <td>${kebutuhanTotal.protein}</td>
           <td>${kebutuhanTotal.lemak}</td>
@@ -308,13 +311,29 @@ export default function HasilPage() {
             <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Hasil Analisis Gizi</h1>
             <p className="text-slate-400 font-medium">Grafik dan ringkasan tren asupan gizi harian.</p>
           </div>
-          <button
-            onClick={handleExportPDF}
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-dark transition-all shadow-lg w-fit"
-          >
-            <FileDown size={16} />
-            Export Data (PDF)
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={exportType}
+              onChange={e => setExportType(e.target.value)}
+              className="px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-xs uppercase tracking-widest rounded-2xl outline-none"
+            >
+              <option value="mingguan">Mingguan (7 Hari)</option>
+              <option value="1">Harian (Hari 1)</option>
+              <option value="2">Harian (Hari 2)</option>
+              <option value="3">Harian (Hari 3)</option>
+              <option value="4">Harian (Hari 4)</option>
+              <option value="5">Harian (Hari 5)</option>
+              <option value="6">Harian (Hari 6)</option>
+              <option value="7">Harian (Hari 7)</option>
+            </select>
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-dark transition-all shadow-lg w-fit"
+            >
+              <FileDown size={16} />
+              Export Data (PDF)
+            </button>
+          </div>
         </div>
 
         {loading ? (

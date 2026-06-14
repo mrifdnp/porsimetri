@@ -37,6 +37,7 @@ export default function NakesPasienPage({ params }: Props) {
   const [expandedHari, setExpandedHari] = useState<number | null>(1);
   const [accessLogs, setAccessLogs] = useState<any[]>([]);
   const [pctForm, setPctForm] = useState<Record<string, Record<string, string>>>({});
+  const [exportType, setExportType] = useState<string>("mingguan");
 
   const NUTRI_KEYS = ["energi", "protein", "lemak", "karbohidrat", "serat"] as const;
   type NutriKey = typeof NUTRI_KEYS[number];
@@ -170,6 +171,7 @@ export default function NakesPasienPage({ params }: Props) {
     const totals = { energi: 0, protein: 0, lemak: 0, karbo: 0, serat: 0 };
 
     for (let h = 1; h <= 7; h++) {
+      if (exportType !== "mingguan" && h !== parseInt(exportType)) continue;
       const hRecs = records.filter(r => r.hari === h);
       for (const r of hRecs) {
         const a = analisis.find(x => x.foodRecordId === r.id);
@@ -208,12 +210,13 @@ export default function NakesPasienPage({ params }: Props) {
       }
     }
 
+    const faktor = exportType === "mingguan" ? 7 : 1;
     const kebutuhanTotal = kebutuhan ? {
-      energi: kebutuhan.energi * 7,
-      protein: kebutuhan.protein * 7,
-      lemak: kebutuhan.lemak * 7,
-      karbo: kebutuhan.karbohidrat * 7,
-      serat: kebutuhan.serat * 7,
+      energi: kebutuhan.energi * faktor,
+      protein: kebutuhan.protein * faktor,
+      lemak: kebutuhan.lemak * faktor,
+      karbo: kebutuhan.karbohidrat * faktor,
+      serat: kebutuhan.serat * faktor,
     } : null;
 
     const pct = kebutuhanTotal ? {
@@ -269,7 +272,7 @@ export default function NakesPasienPage({ params }: Props) {
       <div class="info-row"><span class="info-label">Usia</span><span class="info-value">${usia}</span></div>
       <div class="info-row"><span class="info-label">Pekerjaan</span><span class="info-value">${pekerjaan}</span></div>
       <div class="info-row"><span class="info-label">Alamat</span><span class="info-value">${alamat}</span></div>
-      <div class="info-row"><span class="info-label">Periode</span><span class="info-value">7 Hari (${records.length} item)</span></div>
+      <div class="info-row"><span class="info-label">Periode</span><span class="info-value">${exportType === "mingguan" ? `7 Hari (${records.length} item)` : `Hari ke-${exportType}`}</span></div>
     </div>
     <table>
       <thead>
@@ -302,7 +305,7 @@ export default function NakesPasienPage({ params }: Props) {
           <td>${(Math.round(totals.serat*10)/10).toFixed(1)}</td>
         </tr>
         ${kebutuhanTotal ? `<tr class="footer-row">
-          <td colspan="7" style="text-align:right;font-weight:800">Kebutuhan Zat Gizi (7 hari)</td>
+          <td colspan="7" style="text-align:right;font-weight:800">Kebutuhan Zat Gizi \${exportType === "mingguan" ? "(7 hari)" : "(Harian)"}</td>
           <td>${kebutuhanTotal.energi}</td>
           <td>${kebutuhanTotal.protein}</td>
           <td>${kebutuhanTotal.lemak}</td>
@@ -362,6 +365,20 @@ export default function NakesPasienPage({ params }: Props) {
           </div>
           
           <div className="hidden md:flex items-center gap-4">
+            <select
+              value={exportType}
+              onChange={e => setExportType(e.target.value)}
+              className="px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-xs uppercase tracking-widest rounded-2xl outline-none"
+            >
+              <option value="mingguan">Mingguan (7 Hari)</option>
+              <option value="1">Harian (Hari 1)</option>
+              <option value="2">Harian (Hari 2)</option>
+              <option value="3">Harian (Hari 3)</option>
+              <option value="4">Harian (Hari 4)</option>
+              <option value="5">Harian (Hari 5)</option>
+              <option value="6">Harian (Hari 6)</option>
+              <option value="7">Harian (Hari 7)</option>
+            </select>
             <button
               onClick={handleExportPDF}
               className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-dark transition-all shadow-lg"
