@@ -169,6 +169,25 @@ export default function AdminMakananPage() {
     }
   };
 
+  const handleDeleteKategori = async () => {
+    const kat = kategoriList.find(k => k.id.toString() === form.kategori);
+    if (!kat) return;
+    if (!confirm(`Yakin ingin menghapus kategori "${kat.nama}"?`)) return;
+    try {
+      const res = await fetch(`/api/kategori/${kat.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok) {
+        setKategoriList(prev => prev.filter(k => k.id !== kat.id));
+        setForm(prev => ({ ...prev, kategori: "" }));
+        alert("Kategori berhasil dihapus");
+      } else {
+        alert(data.error || "Gagal menghapus kategori");
+      }
+    } catch (e) {
+      alert("Terjadi kesalahan saat menghapus kategori");
+    }
+  };
+
   useEffect(() => {
     Promise.all([
       fetch("/api/makanan").then(r => r.json()),
@@ -246,33 +265,58 @@ export default function AdminMakananPage() {
                       <div className="space-y-1.5 md:col-span-1">
                         <div className="flex items-center justify-between">
                           <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Kategori</label>
-                          <button type="button" onClick={async () => {
-                            const nama = prompt("Masukkan nama kategori baru:");
-                            if (!nama) return;
-                            try {
-                              const res = await fetch("/api/kategori", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ nama })
-                              });
-                              if (res.ok) {
-                                const newCat = await res.json();
-                                setKategoriList(prev => [...prev, newCat]);
-                                setForm(prev => ({ ...prev, kategori: newCat.id.toString() }));
-                              } else {
-                                alert("Gagal menambahkan kategori");
+                          <div className="flex items-center gap-1.5">
+                            {form.kategori && (
+                              <button 
+                                type="button" 
+                                onClick={handleDeleteKategori} 
+                                className="text-[9px] font-black uppercase text-rose-500 hover:bg-rose-50 px-2 py-0.5 rounded transition-all flex items-center gap-1"
+                                title="Hapus kategori terpilih"
+                              >
+                                <Trash2 size={10} /> Hapus Kategori
+                              </button>
+                            )}
+                            <button type="button" onClick={async () => {
+                              const nama = prompt("Masukkan nama kategori baru:");
+                              if (!nama) return;
+                              try {
+                                const res = await fetch("/api/kategori", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ nama })
+                                });
+                                if (res.ok) {
+                                  const newCat = await res.json();
+                                  setKategoriList(prev => [...prev, newCat]);
+                                  setForm(prev => ({ ...prev, kategori: newCat.id.toString() }));
+                                } else {
+                                  const errData = await res.json().catch(() => ({}));
+                                  alert(errData.error || "Gagal menambahkan kategori");
+                                }
+                              } catch (e) {
+                                alert("Terjadi kesalahan");
                               }
-                            } catch (e) {
-                              alert("Terjadi kesalahan");
-                            }
-                          }} className="text-[9px] font-black uppercase text-[#00B9AD] hover:bg-[#00B9AD]/10 px-2 py-0.5 rounded transition-all">
-                            + Kategori Baru
-                          </button>
+                            }} className="text-[9px] font-black uppercase text-[#00B9AD] hover:bg-[#00B9AD]/10 px-2 py-0.5 rounded transition-all">
+                              + Kategori Baru
+                            </button>
+                          </div>
                         </div>
-                        <select name="kategori" value={form.kategori} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent focus:border-[#00B9AD] rounded-2xl px-5 py-3 text-sm font-bold outline-none transition-all">
-                            <option value="">Pilih Kategori</option>
-                              {kategoriList.map((k: any) => <option key={k.id} value={k.id}>{k.nama}</option>)}
-                        </select>
+                        <div className="flex gap-2">
+                          <select name="kategori" value={form.kategori} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent focus:border-[#00B9AD] rounded-2xl px-5 py-3 text-sm font-bold outline-none transition-all">
+                              <option value="">Pilih Kategori</option>
+                                {kategoriList.map((k: any) => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                          </select>
+                          {form.kategori && (
+                            <button
+                              type="button"
+                              onClick={handleDeleteKategori}
+                              className="px-3.5 py-3 bg-rose-50 text-rose-500 hover:bg-rose-100 rounded-2xl transition-all flex items-center justify-center shrink-0 border-2 border-transparent"
+                              title="Hapus kategori terpilih"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-1.5 md:col-span-3">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Keterangan Tambahan / Sumber Rekam Makanan</label>
