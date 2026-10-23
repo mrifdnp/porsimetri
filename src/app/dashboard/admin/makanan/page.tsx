@@ -306,16 +306,18 @@ export default function AdminMakananPage() {
                               <option value="">Pilih Kategori</option>
                                 {kategoriList.map((k: any) => <option key={k.id} value={k.id}>{k.nama}</option>)}
                           </select>
-                          {form.kategori && (
-                            <button
-                              type="button"
-                              onClick={handleDeleteKategori}
-                              className="px-3.5 py-3 bg-rose-50 text-rose-500 hover:bg-rose-100 rounded-2xl transition-all flex items-center justify-center shrink-0 border-2 border-transparent"
-                              title="Hapus kategori terpilih"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={handleDeleteKategori}
+                            className={`px-3.5 py-3 rounded-2xl transition-all flex items-center justify-center shrink-0 border-2 border-transparent ${
+                              form.kategori 
+                                ? "bg-rose-50 text-rose-500 hover:bg-rose-100 cursor-pointer" 
+                                : "bg-slate-100 text-slate-300 cursor-not-allowed"
+                            }`}
+                            title={form.kategori ? "Hapus kategori terpilih" : "Pilih kategori untuk menghapus"}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </div>
                       <div className="space-y-1.5 md:col-span-3">
